@@ -2,15 +2,19 @@ module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
 import Browser.Navigation
 import Chrome
-import DataSource
+import DataSource exposing (DataSource)
+import DataSource.Http
 import Element exposing (fill, width)
 import Element.Font
 import FontAwesome
 import Html exposing (Html)
+import OptimizedDecoder as Decode
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
+import Pages.Secrets as Secrets
 import Path exposing (Path)
 import Route exposing (Route)
+import Service exposing (Service)
 import SharedTemplate exposing (SharedTemplate)
 import View exposing (View)
 
@@ -36,7 +40,7 @@ type Msg
 
 
 type alias Data =
-    ()
+    List Service
 
 
 type SharedMsg
@@ -71,7 +75,7 @@ init navigationKey flags maybePagePath =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnPageChange _ ->
+        OnPageChange url ->
             ( { model | showMobileMenu = False }, Cmd.none )
 
         ToggleMobileMenu ->
@@ -83,9 +87,13 @@ subscriptions _ _ =
     Sub.none
 
 
-data : DataSource.DataSource Data
+data : DataSource (List Service)
 data =
-    DataSource.succeed ()
+    DataSource.Http.get
+        (Secrets.succeed "https://sheets.googleapis.com/v4/spreadsheets/10tGJn9MCEJ10CraGIf7HP57phJ4FF5Jkw--JwOmkvA0/values/Combined!A2:P?key=AIzaSyBsbBckMsh-o2xnE7c4mcyb2iCeNhzFbuw&valueRenderOption=UNFORMATTED_VALUE")
+        (Decode.field "values"
+            (Decode.list Service.decoder)
+        )
 
 
 view :

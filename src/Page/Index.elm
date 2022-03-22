@@ -12,7 +12,7 @@ import Head.Seo as Seo
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
-import Service exposing (Tag(..))
+import Service exposing (Category(..))
 import Shared
 import View exposing (View)
 
@@ -51,7 +51,7 @@ head static =
         { canonicalUrlOverride = Nothing
         , siteName = "where-to-turn-nashville"
         , image =
-            { url = Pages.Url.external "https://where-to-turn-nashville.netlify.com"
+            { url = Pages.Url.external "https://where-to-turn-nashville.netlify.app"
             , alt = "Where to turn in Nashville logo"
             , dimensions = Nothing
             , mimeType = Nothing
@@ -69,11 +69,11 @@ type alias Data =
 
 viewFilterLink filter =
     let
-        ( icon, title, path ) =
+        ( icon, title ) =
             filterDetails filter
     in
     Element.link []
-        { url = path
+        { url = "/services/" ++ Service.categoryToString filter
         , label =
             Input.button
                 [ width (px 170)
@@ -97,56 +97,40 @@ viewFilterLink filter =
 filterDetails filter =
     case filter of
         Shelter ->
-            ( FontAwesome.bed, "Shelter", "/shelter" )
+            ( FontAwesome.bed, "Shelter" )
 
         Food ->
-            ( FontAwesome.utensils, "Food", "/food" )
+            ( FontAwesome.utensils, "Food" )
 
         Healthcare ->
-            ( FontAwesome.heartbeat, "Healthcare", "/healthcare" )
+            ( FontAwesome.heartbeat, "Healthcare" )
 
         ShowersAndRestrooms ->
-            ( FontAwesome.shower, "Showers and restrooms", "/showers-and-restrooms" )
+            ( FontAwesome.shower, "Showers and restrooms" )
 
         Childcare ->
-            ( FontAwesome.child, "Childcare", "/childcare" )
+            ( FontAwesome.child, "Childcare" )
 
         DomesticViolence ->
-            ( FontAwesome.exclamationTriangle, "Domestic violence", "/domestic-violence" )
+            ( FontAwesome.exclamationTriangle, "Domestic violence" )
 
         LegalAid ->
-            ( FontAwesome.balanceScale, "Legal aid", "/legal-aid" )
+            ( FontAwesome.balanceScale, "Legal aid" )
 
         FinancialAid ->
-            ( FontAwesome.creditCard, "Financial aid", "/financial-aid" )
+            ( FontAwesome.creditCard, "Financial aid" )
 
         JobsAndEducation ->
-            ( FontAwesome.briefcase, "Jobs and education", "/jobs-and-education" )
+            ( FontAwesome.briefcase, "Jobs and education" )
 
         LgbtqPlus ->
-            ( FontAwesome.flag, "LGBTQ+", "/lgbtq-plus" )
+            ( FontAwesome.flag, "LGBTQ+" )
 
         RentersAssistance ->
-            ( FontAwesome.user, "Renters' assistance", "/renters-assistance" )
+            ( FontAwesome.user, "Renters' assistance" )
 
         Internet ->
-            ( FontAwesome.wifi, "Internet", "/internet" )
-
-
-filters =
-    [ Shelter
-    , Food
-    , Healthcare
-    , ShowersAndRestrooms
-    , Childcare
-    , DomesticViolence
-    , LegalAid
-    , FinancialAid
-    , JobsAndEducation
-    , LgbtqPlus
-    , RentersAssistance
-    , Internet
-    ]
+            ( FontAwesome.wifi, "Internet" )
 
 
 view :
@@ -164,7 +148,7 @@ view maybeUrl sharedModel static =
             , spacing 10
             ]
             [ paragraph [ centerX, Font.center ] [ text "Find help in Nashville" ]
-            , wrappedRow [ spacing 5 ] (List.map viewFilterLink filters)
+            , wrappedRow [ spacing 5 ] (List.map viewFilterLink Service.categories)
             ]
         ]
     }
