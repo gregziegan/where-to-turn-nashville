@@ -46,7 +46,7 @@ jobs:
       - name: elm-tooling install
         run: npx --no-install elm-tooling install
       - name: Tests
-        run: npm install && npm test
+        run: npm install && npm run build && npm test
         env:
           GITHUB_TOKEN: secrets.GITHUB_TOKEN
       - name: Add elm-review, elm and elm-format to path
