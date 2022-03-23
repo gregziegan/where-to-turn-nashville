@@ -45,15 +45,8 @@ jobs:
         run: npm ci
       - name: elm-tooling install
         run: npx --no-install elm-tooling install
-      - uses: nick-invision/retry@v2
-        name: Build
-        with:
-          max_attempts: 3
-          timeout_minutes: 3
-          retry_on: error
-          command: npm install && npm run build
       - name: Tests
-        run: npm test
+        run: npm install && npm test
         env:
           GITHUB_TOKEN: secrets.GITHUB_TOKEN
       - name: Add elm-review, elm and elm-format to path
@@ -149,18 +142,3 @@ jobs:
             * [Changes since last release](https://github.com/${{ github.repository }}/compare/${{ needs.compute_tags.outputs.last_release_tag }}..${{ needs.compute_tags.outputs.release_tag }})
         env:
           GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v1.2
-        with:
-          publish-dir: './dist'
-          production-branch: main-deploy 
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from GitHub Actions"
-          enable-pull-request-comment: false
-          enable-commit-comment: true
-          overwrites-pull-request-comment: true
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        timeout-minutes: 1
