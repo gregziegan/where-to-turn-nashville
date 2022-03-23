@@ -1,0 +1,158 @@
+name: Build and Deploy
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      # Re-use node_modules between runs until package-lock.json changes.
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/Cypress
+            node_modules
+          key: node_modules-node-v${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
+
+      # Re-use ~/.elm between runs until elm.json, elm-tooling.json or
+      # review/elm.json changes. The Elm compiler saves downloaded Elm packages
+      # to ~/.elm, and elm-tooling saves downloaded tool executables there.
+      - name: Cache ~/.elm
+        uses: actions/cache@v2
+        with:
+          path: ~/.elm
+          key: elm-${{ hashFiles('elm.json', 'elm-tooling.json', 'review/elm.json') }}
+
+      # Install npm packages, unless we restored them from cache.
+      # Since `npm ci` removes the node_modules folder before running it’s
+      # important to skip this step if cache was restored.
+      - name: npm ci
+        # if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        env:
+          # If you have a `"postinstall": "elm-tooling install"` script in your
+          # package.json, this turns it into a no-op. We’ll run it in the next
+          # step because of the caching. If elm-tooling.json changes but
+          # package-lock.json does not, the postinstall script needs running
+          # but this step won’t.
+          NO_ELM_TOOLING_INSTALL: 1
+        run: npm ci
+      - name: elm-tooling install
+        run: npx --no-install elm-tooling install
+      - uses: nick-invision/retry@v2
+        name: Build
+        with:
+          max_attempts: 3
+          timeout_minutes: 3
+          retry_on: error
+          command: npm install && npm run build
+      - name: Tests
+        run: npm test
+        env:
+          GITHUB_TOKEN: secrets.GITHUB_TOKEN
+      - name: Add elm-review, elm and elm-format to path
+        run: npm bin >> $GITHUB_PATH
+      # - uses: sparksp/elm-review-action@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: elm-format
+        # run: npx --no-install elm-format --validate src/
+
+  compute_tags:
+    name: Compute Tags
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.compute_tag.outputs.next_tag }}
+      last_release_tag: ${{ steps.compute_tag.outputs.previous_tag }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Compute release tag
+        id: compute_tag
+        uses: craig-day/compute-tag@v13
+        with:
+          github_token: ${{ github.token }}
+          version_scheme: continuous
+          version_type: major
+      
+  commit_assets:
+    runs-on: ubuntu-latest
+    name: Commit Assets
+    needs:
+      - compute_tags
+    steps:
+      - uses: actions/checkout@v2.3.4
+      
+      - id: commit_assets
+        run: |
+          set -ex -o pipefail
+          git config user.name "Release Bot"
+          git config user.email "not.real@example.com"
+          git add -f dist
+          git commit -m "Build application for $GITHUB_SHA"
+          
+          BRANCH_NAME="$(echo "${GITHUB_HEAD_REF:-$GITHUB_REF}" | sed -e 's/refs\/heads\///')-deploy"
+          git push --force origin "HEAD:refs/heads/$BRANCH_NAME"
+          echo "::set-output name=git_branch::$BRANCH_NAME"
+  
+  release:
+    name: Create Release
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: 
+      - commit_assets
+      - compute_tags
+    steps:
+      # Checkout the ref that contains artifacts
+      - uses: actions/checkout@v2
+        with:
+          ref: main-deploy
+
+      - name: Build release message
+        id: release_message
+        run: echo "::set-output name=message::$(git log --format=%B -n 1 ${{ github.sha }})"
+
+      - name: Push tag
+        run: |
+          git config user.name "Release Bot"
+          git config user.email "not.real@example.com"
+          git push origin "HEAD:refs/tags/$TAG"
+        env:
+          TAG: ${{ needs.compute_tags.outputs.release_tag }}
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ needs.compute_tags.outputs.release_tag }}
+          release_name: ${{ needs.compute_tags.outputs.release_tag }}
+          body: |
+            This release includes generated configuration artifacts that are dependent on a successful version bump.
+            ### Links
+            * [Pull Request diff](https://github.com/${{ github.repository }}/compare/${{ github.sha }}..${{ needs.compute_tags.outputs.release_tag }})
+            * [Changes since last release](https://github.com/${{ github.repository }}/compare/${{ needs.compute_tags.outputs.last_release_tag }}..${{ needs.compute_tags.outputs.release_tag }})
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v1.2
+        with:
+          publish-dir: './dist'
+          production-branch: main-deploy 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions"
+          enable-pull-request-comment: false
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 1
