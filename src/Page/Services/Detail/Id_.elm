@@ -45,7 +45,10 @@ page =
 routes : DataSource (List RouteParams)
 routes =
     DataSource.Http.get
-        (Secrets.succeed "https://sheets.googleapis.com/v4/spreadsheets/10tGJn9MCEJ10CraGIf7HP57phJ4FF5Jkw--JwOmkvA0/values/Combined!A2:P?key=AIzaSyBsbBckMsh-o2xnE7c4mcyb2iCeNhzFbuw&valueRenderOption=UNFORMATTED_VALUE")
+        (Secrets.succeed
+            (\apiKey -> "https://sheets.googleapis.com/v4/spreadsheets/10tGJn9MCEJ10CraGIf7HP57phJ4FF5Jkw--JwOmkvA0/values/Combined!A2:P?key=" ++ apiKey ++ "&valueRenderOption=UNFORMATTED_VALUE")
+            |> Secrets.with "GOOGLE_API_KEY"
+        )
         (Decode.field "values"
             (Decode.list (Decode.index 0 Decode.int |> Decode.map (String.fromInt >> RouteParams)))
         )
