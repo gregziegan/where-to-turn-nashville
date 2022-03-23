@@ -5,7 +5,7 @@
     "start": "elm-pages dev",
     "add": "elm-pages add",
     "build": "elm-pages build",
-    "test": "elm-test"
+    "test": "elm-test-rs"
   },
   "devDependencies": {
     "elm-optimize-level-2": "0.2.3",
