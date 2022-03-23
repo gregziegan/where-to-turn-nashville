@@ -48,8 +48,8 @@ jobs:
       - name: Tests
         run: npm install && npm run build && npm test
         env:
-          GITHUB_TOKEN: secrets.GITHUB_TOKEN
-          GOOGLE_API_KEY: secrets.GOOGLE_API_KEY
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       - name: Add elm-review, elm and elm-format to path
         run: npm bin >> $GITHUB_PATH
       # - uses: sparksp/elm-review-action@v1
@@ -91,7 +91,7 @@ jobs:
           retry_on: error
           command: npm install && npm run build
         env:
-          GOOGLE_API_KEY: secrets.GOOGLE_API_KEY
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           VERSION: ${{ needs.compute_tags.outputs.release_tag }}
       
       - id: commit_assets
