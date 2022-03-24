@@ -2,6 +2,7 @@ module Organization exposing (Organization, decoder, sheetId)
 
 import OptimizedDecoder as Decode exposing (Decoder, int, nullable, string)
 import OptimizedDecoder.Pipeline exposing (custom, decode)
+import Regex
 import Schedule exposing (Schedule)
 
 
@@ -20,6 +21,28 @@ type alias Organization =
     }
 
 
+normalizeSite maybeSite =
+    Maybe.map
+        (\str ->
+            if String.startsWith "http" str then
+                str
+
+            else
+                "https://" ++ str
+        )
+        maybeSite
+
+
+nonDigitRegex =
+    Maybe.withDefault Regex.never <| Regex.fromString "[^0-9]"
+
+
+normalizePhone maybePhone =
+    Maybe.map
+        (Regex.replace nonDigitRegex (\_ -> ""))
+        maybePhone
+
+
 decoder : Decoder Organization
 decoder =
     decode Organization
@@ -28,5 +51,5 @@ decoder =
         |> custom (Decode.index 2 (nullable string))
         |> custom (Decode.index 3 (nullable Schedule.decoder))
         |> custom (Decode.index 4 (nullable string))
-        |> custom (Decode.index 5 (nullable string))
-        |> custom (Decode.index 6 (nullable string))
+        |> custom (Decode.index 9 (nullable string |> Decode.map normalizeSite))
+        |> custom (Decode.index 10 (nullable string |> Decode.map normalizePhone))

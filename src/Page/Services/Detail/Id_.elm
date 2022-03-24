@@ -5,12 +5,13 @@ import Button
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Dict
-import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width, wrappedRow)
+import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, newTabLink, padding, paragraph, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Font as Font
 import Element.Input as Input
 import FontAwesome exposing (fontAwesome)
 import Head
 import Head.Seo as Seo
+import Mask
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
 import Page exposing (Page, PageWithState, StaticPayload)
@@ -103,10 +104,11 @@ directionsLink =
     link []
         { url = "/"
         , label =
-            Button.primary
+            Button.transparent
                 { onPress = Nothing
                 , text = "Directions"
                 }
+                |> Button.fullWidth
                 |> Button.withIcon FontAwesome.mapMarker
                 |> Button.render
         }
@@ -116,36 +118,35 @@ saveLink =
     link []
         { url = "/"
         , label =
-            Button.primary
+            Button.transparent
                 { onPress = Nothing
-                , text = "Save"
+                , text = "Add to My Saved"
                 }
+                |> Button.fullWidth
                 |> Button.withIcon FontAwesome.star
                 |> Button.render
         }
 
 
-messageLink =
-    link []
-        { url = "/"
-        , label =
-            Button.primary
-                { onPress = Nothing
-                , text = "Message"
-                }
-                |> Button.withIcon FontAwesome.envelope
-                |> Button.render
+smsButton =
+    Button.transparent
+        { onPress = Nothing
+        , text = "Text me this info"
         }
+        |> Button.fullWidth
+        |> Button.withIcon FontAwesome.commentAlt
+        |> Button.render
 
 
-callLink =
+callLink phone =
     link []
-        { url = "/"
+        { url = "tel:+" ++ phone
         , label =
-            Button.primary
+            Button.transparent
                 { onPress = Nothing
-                , text = "Call"
+                , text = "Call " ++ Mask.string { mask = "(###) ###-####", replace = '#' } phone
                 }
+                |> Button.fullWidth
                 |> Button.withIcon FontAwesome.phone
                 |> Button.render
         }
@@ -156,6 +157,17 @@ viewSection children =
         [ textColumn [ width fill, spacing 10, padding 10 ]
             children
         ]
+
+
+websiteLink website =
+    newTabLink []
+        { url = website
+        , label =
+            row [ spacing 10, padding 10 ]
+                [ text website
+                , el [] <| Element.html <| FontAwesome.icon FontAwesome.externalLinkAlt
+                ]
+        }
 
 
 viewService : Organization -> Service -> Element Msg
@@ -183,11 +195,19 @@ viewService organization service =
             [ paragraph [ Font.bold ] [ text "How to apply" ]
             , paragraph [] [ text <| Maybe.withDefault "" <| service.applicationProcess ]
             ]
-        , wrappedRow [ width fill, spacing 10 ]
-            [ directionsLink
-            , saveLink
-            , messageLink
-            , callLink
+        , row [ width fill ]
+            [ column [ width fill, spacing 10 ]
+                [ directionsLink
+                , case organization.phone of
+                    Just phone ->
+                        callLink phone
+
+                    Nothing ->
+                        Element.none
+                , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
+                , smsButton
+                , saveLink
+                ]
             ]
         ]
 

@@ -1,6 +1,6 @@
-module Button exposing (Config, primary, render, withIcon)
+module Button exposing (Config, fullWidth, primary, render, transparent, withIcon)
 
-import Element exposing (el, fill, padding, row, spacing, text, width)
+import Element exposing (el, fill, padding, px, row, spacing, text, width)
 import Element.Background as Background
 import Element.Font as Font
 import Element.Input as Input
@@ -16,8 +16,16 @@ type alias Config msg =
     }
 
 
+fullWidth config =
+    { config | attributes = config.attributes ++ [ width fill ] }
+
+
+attributes =
+    [ width (px 200) ]
+
+
 defaultConfig =
-    { attributes = []
+    { attributes = attributes
     , icon = Nothing
     , text = ""
     , onPress = Nothing
@@ -31,11 +39,23 @@ withIcon icon config =
 primary { onPress, text } =
     { defaultConfig
         | attributes =
-            [ Background.color Palette.gray
-            , padding 10
-            , Font.color Palette.white
-            ]
+            attributes
+                ++ [ Background.color Palette.gray
+                   , padding 10
+                   , Font.color Palette.white
+                   ]
         , onPress = onPress
+        , text = text
+    }
+
+
+transparent { text } =
+    { defaultConfig
+        | attributes =
+            attributes
+                ++ [ padding 10
+                   ]
+        , onPress = Nothing
         , text = text
     }
 
