@@ -81,6 +81,18 @@ filterService category service =
         Nothing
 
 
+viewList static =
+    let
+        selectedCategory =
+            Maybe.andThen Service.categoryFromString static.routeParams.filter
+    in
+    column [ spacing 20 ]
+        (List.filterMap
+            (Maybe.map (Service.listItem 1.7) << filterService selectedCategory)
+            (Dict.values static.sharedData.services)
+        )
+
+
 view :
     Maybe PageUrl
     -> Shared.Model
@@ -93,24 +105,17 @@ view maybeUrl sharedModel static =
     in
     { title = "Where to turn in Nashville | " ++ filterText
     , body =
-        let
-            selectedCategory =
-                Maybe.andThen Service.categoryFromString static.routeParams.filter
-        in
         [ column
             [ centerX
             , width (fill |> maximum 1200)
             , padding 10
             , spacing 10
             ]
-            ([ Breadcrumbs.view "Back" sharedModel.history
-             , paragraph [ Font.semiBold ]
+            [ Breadcrumbs.view "Back" sharedModel.history
+            , paragraph [ Font.semiBold ]
                 [ text filterText
                 ]
-             ]
-                ++ List.filterMap
-                    (Maybe.map (Service.listItem 1.7) << filterService selectedCategory)
-                    (Dict.values static.sharedData.services)
-            )
+            , viewList static
+            ]
         ]
     }

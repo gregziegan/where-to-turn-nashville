@@ -5,7 +5,7 @@ import Button
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Dict
-import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
+import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Font as Font
 import Element.Input as Input
 import FontAwesome exposing (fontAwesome)
@@ -183,7 +183,7 @@ viewService organization service =
             [ paragraph [ Font.bold ] [ text "How to apply" ]
             , paragraph [] [ text <| Maybe.withDefault "" <| service.applicationProcess ]
             ]
-        , row [ width fill, spacing 10 ]
+        , wrappedRow [ width fill, spacing 10 ]
             [ directionsLink
             , saveLink
             , messageLink

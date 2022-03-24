@@ -1,6 +1,6 @@
 module Service exposing (Category(..), Service, categories, categoryFromString, categoryToString, decoder, listItem, sheetId)
 
-import Element exposing (column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, width)
+import Element exposing (column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
 import Element.Border as Border
 import Element.Font as Font
 import FontAwesome
@@ -210,14 +210,16 @@ decoder =
 
 
 photo service =
-    el [] (Element.html <| FontAwesome.icon FontAwesome.home)
+    el [] (Element.html <| FontAwesome.icon FontAwesome.infoCircle)
 
 
 briefDescription service =
-    column [ width fill ]
+    textColumn [ width (fill |> maximum 250) ]
         [ paragraph [ Font.size 14 ]
-            [ text service.name
+            [ text service.organizationName
             ]
+        , paragraph [ Font.size 12 ]
+            [ text <| String.join " " <| List.take 10 <| String.words service.description ]
         ]
 
 
@@ -242,7 +244,7 @@ listItem distance service =
                 [ spacing 10
                 , padding 10
                 , height (px 100)
-                , width (fill |> minimum 355 |> maximum 600)
+                , width (fill |> minimum 355 |> maximum 1000)
                 , Border.width 1
                 ]
                 [ photo service
