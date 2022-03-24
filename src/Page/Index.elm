@@ -67,7 +67,7 @@ type alias Data =
     ()
 
 
-viewFilterLink filter =
+viewFilterLink index filter =
     let
         ( icon, title ) =
             filterDetails filter
@@ -76,12 +76,19 @@ viewFilterLink filter =
         { url = "/services/" ++ Service.categoryToString filter
         , label =
             Input.button
-                [ width (px 170)
-                , height (px 100)
-                , Border.width 1
-                , spacing 5
-                , padding 10
-                ]
+                ([ width (px 170)
+                 , height (px 100)
+                 , Border.width 1
+                 , spacing 5
+                 , padding 10
+                 ]
+                    ++ (if index == 0 then
+                            [ Input.focusedOnLoad ]
+
+                        else
+                            []
+                       )
+                )
                 { onPress = Nothing
                 , label =
                     row [ width fill, centerX, spacing 10 ]
@@ -148,7 +155,7 @@ view maybeUrl sharedModel static =
             , spacing 10
             ]
             [ paragraph [ centerX, Font.center ] [ text "Find help in Nashville" ]
-            , wrappedRow [ spacing 5 ] (List.map viewFilterLink Service.categories)
+            , wrappedRow [ spacing 5 ] (List.indexedMap viewFilterLink Service.categories)
             ]
         ]
     }

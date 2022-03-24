@@ -1,12 +1,12 @@
 module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
-import Breadcrumbs exposing (UrlPath)
+import Breadcrumbs
 import Browser.Navigation
 import Chrome
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Dict exposing (Dict)
-import Element exposing (fill, width)
+import Element exposing (el, fill, padding, width)
 import Element.Font as Font
 import FontAwesome
 import Html exposing (Html)
@@ -16,7 +16,7 @@ import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Secrets as Secrets
 import Path exposing (Path)
-import Route exposing (Route)
+import Route exposing (Route(..))
 import Service exposing (Service)
 import SharedTemplate exposing (SharedTemplate)
 import Spreadsheet
@@ -35,7 +35,12 @@ template =
 
 
 type Msg
-    = OnPageChange UrlPath
+    = OnPageChange
+        { path : Path
+        , query : Maybe String
+        , fragment : Maybe String
+        }
+    | GoBack
     | ToggleMobileMenu
 
 
@@ -45,7 +50,7 @@ type SharedMsg
 
 type alias Model =
     { showMobileMenu : Bool
-    , history : List UrlPath
+    , navKey : Maybe Browser.Navigation.Key
     }
 
 
@@ -54,14 +59,19 @@ init :
     -> Pages.Flags.Flags
     ->
         Maybe
-            { path : UrlPath
+            { path :
+                { path : Path
+                , query : Maybe String
+                , fragment : Maybe String
+                }
             , metadata : route
-            , pageUrl : Maybe PageUrl
+            , pageUrl :
+                Maybe PageUrl
             }
     -> ( Model, Cmd Msg )
 init navigationKey flags maybePagePath =
     ( { showMobileMenu = False
-      , history = []
+      , navKey = navigationKey
       }
     , Cmd.none
     )
@@ -73,9 +83,18 @@ update msg model =
         OnPageChange urlPath ->
             ( { model
                 | showMobileMenu = False
-                , history = List.take 10 <| urlPath :: model.history
               }
             , Cmd.none
+            )
+
+        GoBack ->
+            ( model
+            , case model.navKey of
+                Just key ->
+                    Browser.Navigation.back key 1
+
+                Nothing ->
+                    Cmd.none
             )
 
         ToggleMobileMenu ->
@@ -142,6 +161,17 @@ view sharedData page model toMsg pageView =
             , toggleMobileMenu = ToggleMobileMenu
             }
             |> Element.map toMsg
+        , case page.route of
+            Just Index ->
+                Element.none
+
+            Just _ ->
+                Breadcrumbs.view "Back" model.navKey GoBack
+                    |> el [ padding 10 ]
+                    |> Element.map toMsg
+
+            Nothing ->
+                Element.none
         ]
             ++ pageView.body
             |> Element.column

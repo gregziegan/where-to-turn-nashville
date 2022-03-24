@@ -111,8 +111,7 @@ view maybeUrl sharedModel static =
             , padding 10
             , spacing 10
             ]
-            [ Breadcrumbs.view "Back" sharedModel.history
-            , paragraph [ Font.semiBold ]
+            [ paragraph [ Font.semiBold ]
                 [ text filterText
                 ]
             , viewList static

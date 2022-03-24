@@ -162,7 +162,7 @@ viewService : Organization -> Service -> Element Msg
 viewService organization service =
     column [ width fill, spacing 10 ]
         [ viewSection
-            [ paragraph [ Font.bold ] [ text organization.name ]
+            [ link [] { url = "/organizations/detail/" ++ String.fromInt organization.id, label = paragraph [ Font.bold ] [ text organization.name ] }
             , el [ alignLeft ] <| Element.html <| FontAwesome.iconWithOptions FontAwesome.infoCircle FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
             , paragraph [ Font.italic ] [ text "Organization" ]
             ]
@@ -231,8 +231,7 @@ view maybeUrl sharedModel static =
             , padding 10
             , spacing 10
             ]
-            [ Breadcrumbs.view "Back to results" sharedModel.history
-            , currentService static.sharedData static.routeParams
+            [ currentService static.sharedData static.routeParams
             ]
         ]
     }
