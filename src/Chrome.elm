@@ -1,8 +1,9 @@
 module Chrome exposing (view)
 
-import Element exposing (alignLeft, alignRight, fill, padding, row, spacing, text, width)
+import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, centerX, fill, height, padding, paragraph, px, row, spacing, text, width)
+import Element.Font as Font
 import Element.Input as Input
-import FontAwesome
+import FontAwesome exposing (Style(..))
 
 
 menuButton toggleMenu =
@@ -10,24 +11,43 @@ menuButton toggleMenu =
 
 
 logo =
-    Element.link [] { url = "/", label = text "Where to turn in Nashville" }
+    Element.link []
+        { url = "/"
+        , label = Element.image [ width (px 60), height (px 60) ] { src = "/images/otn-logo.jpg", description = "Open Table Nashville logo" }
+        }
 
 
 starredLink =
     Element.link [] { url = "/starred", label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.star }
 
 
-view { isMobile, showMobileMenu, toggleMobileMenu } =
+searchLink =
+    Element.link []
+        { url = "/search"
+        , label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.search
+        }
+
+
+view : { device : Device, showMobileMenu : Bool, toggleMobileMenu : msg } -> Element msg
+view { device, showMobileMenu, toggleMobileMenu } =
     row
         [ width fill
         , spacing 5
         , padding 10
         ]
-        [ if isMobile then
-            menuButton toggleMobileMenu
+        [ case device.class of
+            Phone ->
+                menuButton toggleMobileMenu
 
-          else
-            Element.none
-        , Element.el [ alignLeft ] logo
-        , Element.el [ alignRight ] starredLink
+            Tablet ->
+                menuButton toggleMobileMenu
+
+            Desktop ->
+                Element.none
+
+            BigDesktop ->
+                Element.none
+        , Element.el [ centerX ] searchLink
+        , Element.el [ centerX ] starredLink
+        , Element.el [] logo
         ]

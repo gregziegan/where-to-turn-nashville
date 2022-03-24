@@ -1,6 +1,7 @@
 module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
 import Breadcrumbs
+import Browser.Events exposing (onResize)
 import Browser.Navigation
 import Chrome
 import DataSource exposing (DataSource)
@@ -10,9 +11,10 @@ import Element exposing (el, fill, padding, width)
 import Element.Font as Font
 import FontAwesome
 import Html exposing (Html)
-import OptimizedDecoder as Decode
+import OptimizedDecoder as Decode exposing (Decoder, int)
+import OptimizedDecoder.Pipeline exposing (required)
 import Organization exposing (Organization)
-import Pages.Flags
+import Pages.Flags exposing (Flags(..))
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Secrets as Secrets
 import Path exposing (Path)
@@ -42,16 +44,31 @@ type Msg
         }
     | GoBack
     | ToggleMobileMenu
+    | SetWindow Int Int
 
 
 type SharedMsg
     = NoOp
 
 
+type alias Window =
+    { width : Int
+    , height : Int
+    }
+
+
 type alias Model =
     { showMobileMenu : Bool
     , navKey : Maybe Browser.Navigation.Key
+    , window : Window
     }
+
+
+windowDecoder : Decoder Window
+windowDecoder =
+    Decode.succeed Window
+        |> required "width" int
+        |> required "height" int
 
 
 init :
@@ -72,6 +89,14 @@ init :
 init navigationKey flags maybePagePath =
     ( { showMobileMenu = False
       , navKey = navigationKey
+      , window =
+            case flags of
+                BrowserFlags value ->
+                    Decode.decodeValue (Decode.field "window" windowDecoder) value
+                        |> Result.withDefault { width = 600, height = 1000 }
+
+                PreRenderFlags ->
+                    { width = 600, height = 1000 }
       }
     , Cmd.none
     )
@@ -100,10 +125,15 @@ update msg model =
         ToggleMobileMenu ->
             ( { model | showMobileMenu = not model.showMobileMenu }, Cmd.none )
 
+        SetWindow width height ->
+            ( { model | window = { width = width, height = height } }, Cmd.none )
+
 
 subscriptions : Path -> Model -> Sub Msg
 subscriptions _ _ =
-    Sub.none
+    Sub.batch
+        [ onResize SetWindow
+        ]
 
 
 type alias Data =
@@ -153,10 +183,14 @@ view :
     -> View msg
     -> { body : Html msg, title : String }
 view sharedData page model toMsg pageView =
+    let
+        device =
+            Element.classifyDevice model.window
+    in
     { body =
         [ Element.html FontAwesome.useCss
         , Chrome.view
-            { isMobile = False
+            { device = device
             , showMobileMenu = model.showMobileMenu
             , toggleMobileMenu = ToggleMobileMenu
             }

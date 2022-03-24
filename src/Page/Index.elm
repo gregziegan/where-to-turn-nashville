@@ -1,7 +1,7 @@
 module Page.Index exposing (Data, Model, Msg, page)
 
 import DataSource exposing (DataSource)
-import Element exposing (alignRight, centerX, column, el, fill, height, maximum, padding, paragraph, px, row, spacing, text, width, wrappedRow)
+import Element exposing (alignRight, centerX, column, el, fill, height, maximum, padding, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -154,7 +154,15 @@ view maybeUrl sharedModel static =
             , padding 10
             , spacing 10
             ]
-            [ paragraph [ centerX, Font.center ] [ text "Find help in Nashville" ]
+            [ row [ width fill ]
+                [ textColumn [ width fill, padding 10 ]
+                    [ paragraph [ Font.center, Font.size 16 ]
+                        [ text <| String.toUpper "Where to turn in Nashville"
+                        ]
+                    , paragraph [ Font.center, Font.size 12 ]
+                        [ text <| "A guide to navigating resources in Middle Tennessee" ]
+                    ]
+                ]
             , wrappedRow [ spacing 5 ] (List.indexedMap viewFilterLink Service.categories)
             ]
         ]
