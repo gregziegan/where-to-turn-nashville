@@ -23,6 +23,7 @@ import Service exposing (Service)
 import SharedTemplate exposing (SharedTemplate)
 import Spreadsheet
 import View exposing (View)
+import Window exposing (Window)
 
 
 template : SharedTemplate Msg Model Data msg
@@ -51,24 +52,11 @@ type SharedMsg
     = NoOp
 
 
-type alias Window =
-    { width : Int
-    , height : Int
-    }
-
-
 type alias Model =
     { showMobileMenu : Bool
     , navKey : Maybe Browser.Navigation.Key
     , window : Window
     }
-
-
-windowDecoder : Decoder Window
-windowDecoder =
-    Decode.succeed Window
-        |> required "width" int
-        |> required "height" int
 
 
 init :
@@ -92,7 +80,7 @@ init navigationKey flags maybePagePath =
       , window =
             case flags of
                 BrowserFlags value ->
-                    Decode.decodeValue (Decode.field "window" windowDecoder) value
+                    Decode.decodeValue (Decode.field "window" Window.decoder) value
                         |> Result.withDefault { width = 600, height = 1000 }
 
                 PreRenderFlags ->
@@ -193,6 +181,7 @@ view sharedData page model toMsg pageView =
             { device = device
             , showMobileMenu = model.showMobileMenu
             , toggleMobileMenu = ToggleMobileMenu
+            , window = model.window
             }
             |> Element.map toMsg
         , case page.route of
