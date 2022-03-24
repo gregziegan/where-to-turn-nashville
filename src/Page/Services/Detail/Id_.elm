@@ -1,22 +1,28 @@
 module Page.Services.Detail.Id_ exposing (Data, Model, Msg, page)
 
+import Breadcrumbs
 import Button
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Dict
-import Element exposing (centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
+import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
 import Element.Input as Input
 import FontAwesome exposing (fontAwesome)
 import Head
 import Head.Seo as Seo
 import OptimizedDecoder as Decode
+import Organization exposing (Organization)
 import Page exposing (Page, PageWithState, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Secrets as Secrets
 import Pages.Url
+import Path
 import QueryParams
+import Schedule
+import Service exposing (Service)
 import Shared
+import Spreadsheet
 import View exposing (View)
 
 
@@ -46,11 +52,15 @@ routes : DataSource (List RouteParams)
 routes =
     DataSource.Http.get
         (Secrets.succeed
-            (\apiKey -> "https://sheets.googleapis.com/v4/spreadsheets/10tGJn9MCEJ10CraGIf7HP57phJ4FF5Jkw--JwOmkvA0/values/Combined!A2:P?key=" ++ apiKey ++ "&valueRenderOption=UNFORMATTED_VALUE")
+            (Spreadsheet.url Service.sheetId "A2:P")
             |> Secrets.with "GOOGLE_API_KEY"
         )
         (Decode.field "values"
-            (Decode.list (Decode.index 0 Decode.int |> Decode.map (String.fromInt >> RouteParams)))
+            (Decode.list
+                (Decode.index 0 Decode.int
+                    |> Decode.map (String.fromInt >> RouteParams)
+                )
+            )
         )
 
 
@@ -83,14 +93,9 @@ type alias Data =
     ()
 
 
-viewLogo service =
-    text "blank image"
-
-
-viewNameAndDescription service =
+viewDescription service =
     textColumn [ width fill ]
-        [ paragraph [ width fill ] [ text service.name ]
-        , paragraph [ width fill ] [ text service.description ]
+        [ paragraph [ width fill ] [ text service.description ]
         ]
 
 
@@ -146,11 +151,37 @@ callLink =
         }
 
 
-viewService service =
+viewSection children =
+    row [ width fill ]
+        [ textColumn [ width fill, spacing 10, padding 10 ]
+            children
+        ]
+
+
+viewService : Organization -> Service -> Element Msg
+viewService organization service =
     column [ width fill, spacing 10 ]
-        [ row [ width fill ]
-            [ viewLogo service
-            , viewNameAndDescription service
+        [ viewSection
+            [ paragraph [ Font.bold ] [ text organization.name ]
+            , el [ alignLeft ] <| Element.html <| FontAwesome.iconWithOptions FontAwesome.infoCircle FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
+            , paragraph [ Font.italic ] [ text "Organization" ]
+            ]
+        , viewSection
+            [ paragraph [] [ text <| Maybe.withDefault "" <| service.address ] ]
+        , viewSection
+            [ viewDescription service
+            ]
+        , viewSection
+            [ paragraph [ Font.bold ] [ text "Requirements" ]
+            , paragraph [] [ text <| Maybe.withDefault "" <| service.requirements ]
+            ]
+        , viewSection
+            [ paragraph [ Font.bold ] [ text "Hours" ]
+            , paragraph [] [ text <| Maybe.withDefault "" <| Maybe.map Schedule.toString service.hours ]
+            ]
+        , viewSection
+            [ paragraph [ Font.bold ] [ text "How to apply" ]
+            , paragraph [] [ text <| Maybe.withDefault "" <| service.applicationProcess ]
             ]
         , row [ width fill, spacing 10 ]
             [ directionsLink
@@ -161,18 +192,28 @@ viewService service =
         ]
 
 
-currentService services params =
+currentService { organizations, services } params =
     let
         maybeService =
             params.id
                 |> String.toInt
-                |> Maybe.andThen (\id -> List.head <| List.filter ((==) id << .id) services)
-    in
-    case maybeService of
-        Just service ->
-            viewService service
+                |> Maybe.andThen (\id -> Dict.get id services)
 
-        Nothing ->
+        maybeOrganization =
+            maybeService
+                |> Maybe.andThen
+                    (\service ->
+                        organizations
+                            |> Dict.filter (\_ org -> org.name == service.organizationName)
+                            |> Dict.values
+                            |> List.head
+                    )
+    in
+    case ( maybeService, maybeOrganization ) of
+        ( Just service, Just organization ) ->
+            viewService organization service
+
+        _ ->
             text "not found"
 
 
@@ -190,7 +231,8 @@ view maybeUrl sharedModel static =
             , padding 10
             , spacing 10
             ]
-            [ currentService static.sharedData static.routeParams
+            [ Breadcrumbs.view "Back to results" sharedModel.history
+            , currentService static.sharedData static.routeParams
             ]
         ]
     }

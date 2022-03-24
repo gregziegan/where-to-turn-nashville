@@ -1,14 +1,17 @@
 module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
+import Breadcrumbs exposing (UrlPath)
 import Browser.Navigation
 import Chrome
 import DataSource exposing (DataSource)
 import DataSource.Http
+import Dict exposing (Dict)
 import Element exposing (fill, width)
-import Element.Font
+import Element.Font as Font
 import FontAwesome
 import Html exposing (Html)
 import OptimizedDecoder as Decode
+import Organization exposing (Organization)
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Secrets as Secrets
@@ -16,6 +19,7 @@ import Path exposing (Path)
 import Route exposing (Route)
 import Service exposing (Service)
 import SharedTemplate exposing (SharedTemplate)
+import Spreadsheet
 import View exposing (View)
 
 
@@ -31,16 +35,8 @@ template =
 
 
 type Msg
-    = OnPageChange
-        { path : Path
-        , query : Maybe String
-        , fragment : Maybe String
-        }
+    = OnPageChange UrlPath
     | ToggleMobileMenu
-
-
-type alias Data =
-    List Service
 
 
 type SharedMsg
@@ -49,6 +45,7 @@ type SharedMsg
 
 type alias Model =
     { showMobileMenu : Bool
+    , history : List UrlPath
     }
 
 
@@ -57,17 +54,15 @@ init :
     -> Pages.Flags.Flags
     ->
         Maybe
-            { path :
-                { path : Path
-                , query : Maybe String
-                , fragment : Maybe String
-                }
+            { path : UrlPath
             , metadata : route
             , pageUrl : Maybe PageUrl
             }
     -> ( Model, Cmd Msg )
 init navigationKey flags maybePagePath =
-    ( { showMobileMenu = False }
+    ( { showMobileMenu = False
+      , history = []
+      }
     , Cmd.none
     )
 
@@ -75,8 +70,13 @@ init navigationKey flags maybePagePath =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnPageChange url ->
-            ( { model | showMobileMenu = False }, Cmd.none )
+        OnPageChange urlPath ->
+            ( { model
+                | showMobileMenu = False
+                , history = List.take 10 <| urlPath :: model.history
+              }
+            , Cmd.none
+            )
 
         ToggleMobileMenu ->
             ( { model | showMobileMenu = not model.showMobileMenu }, Cmd.none )
@@ -87,17 +87,39 @@ subscriptions _ _ =
     Sub.none
 
 
-data : DataSource (List Service)
+type alias Data =
+    { services : Dict Int Service
+    , organizations : Dict Int Organization
+    }
+
+
+toDict entities =
+    entities
+        |> List.map (\e -> ( e.id, e ))
+        |> Dict.fromList
+
+
+data : DataSource Data
 data =
-    DataSource.Http.get
-        (Secrets.succeed
-            (\apiKey ->
-                "https://sheets.googleapis.com/v4/spreadsheets/10tGJn9MCEJ10CraGIf7HP57phJ4FF5Jkw--JwOmkvA0/values/Combined!A2:P?key=" ++ apiKey ++ "&valueRenderOption=UNFORMATTED_VALUE"
+    DataSource.map2
+        Data
+        (DataSource.Http.get
+            (Secrets.succeed
+                (Spreadsheet.url Service.sheetId "A2:P")
+                |> Secrets.with "GOOGLE_API_KEY"
             )
-            |> Secrets.with "GOOGLE_API_KEY"
+            (Decode.field "values"
+                (Decode.list Service.decoder |> Decode.map toDict)
+            )
         )
-        (Decode.field "values"
-            (Decode.list Service.decoder)
+        (DataSource.Http.get
+            (Secrets.succeed
+                (Spreadsheet.url Organization.sheetId "A2:P")
+                |> Secrets.with "GOOGLE_API_KEY"
+            )
+            (Decode.field "values"
+                (Decode.list Organization.decoder |> Decode.map toDict)
+            )
         )
 
 
@@ -124,7 +146,7 @@ view sharedData page model toMsg pageView =
             ++ pageView.body
             |> Element.column
                 [ width fill
-                , Element.Font.family [ Element.Font.typeface "system" ]
+                , Font.family [ Font.typeface "system" ]
                 ]
             |> Element.layout [ width fill ]
     , title = pageView.title

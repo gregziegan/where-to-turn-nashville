@@ -1,12 +1,17 @@
-module Service exposing (Category(..), Service, categories, categoryFromString, categoryToString, decoder, listItem)
+module Service exposing (Category(..), Service, categories, categoryFromString, categoryToString, decoder, listItem, sheetId)
 
 import Element exposing (column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, width)
 import Element.Border as Border
 import Element.Font as Font
 import FontAwesome
-import OptimizedDecoder as Decode exposing (Decoder, int, string)
-import OptimizedDecoder.Pipeline exposing (required)
+import OptimizedDecoder as Decode exposing (Decoder, int, nullable, string)
+import OptimizedDecoder.Pipeline exposing (custom, decode, required)
 import Organization exposing (Organization)
+import Schedule exposing (Schedule)
+
+
+sheetId =
+    "Services"
 
 
 type Category
@@ -83,11 +88,15 @@ categoryToString category =
 type alias Service =
     { id : Int
     , category : Category
+    , busLine : Maybe String
+    , hours : Maybe Schedule
     , name : String
     , description : String
     , requirements : Maybe String
     , applicationProcess : Maybe String
     , notes : Maybe String
+    , address : Maybe String
+    , organizationName : String
     }
 
 
@@ -181,18 +190,23 @@ categoryDecoder =
 
 decoder : Decoder Service
 decoder =
-    Decode.map7 Service
-        (Decode.index 0 Decode.int)
-        (Decode.index 1 categoryDecoder)
-        (Decode.index 5
-            (Decode.string
-                |> Decode.andThen (\str -> Decode.succeed <| String.join " " <| List.take 4 <| String.words str)
+    decode Service
+        |> custom (Decode.index 0 Decode.int)
+        |> custom (Decode.index 1 categoryDecoder)
+        |> custom (Decode.index 2 (nullable string))
+        |> custom (Decode.index 3 (nullable Schedule.decoder))
+        |> custom
+            (Decode.index 5
+                (Decode.string
+                    |> Decode.andThen (\str -> Decode.succeed <| String.join " " <| List.take 4 <| String.words str)
+                )
             )
-        )
-        (Decode.index 5 Decode.string)
-        (Decode.oneOf [ Decode.index 6 (Decode.nullable Decode.string), Decode.succeed Nothing ])
-        (Decode.oneOf [ Decode.index 7 (Decode.nullable Decode.string), Decode.succeed Nothing ])
-        (Decode.oneOf [ Decode.index 8 (Decode.nullable Decode.string), Decode.succeed Nothing ])
+        |> custom (Decode.index 5 Decode.string)
+        |> custom (Decode.oneOf [ Decode.index 6 (Decode.nullable Decode.string), Decode.succeed Nothing ])
+        |> custom (Decode.oneOf [ Decode.index 7 (Decode.nullable Decode.string), Decode.succeed Nothing ])
+        |> custom (Decode.oneOf [ Decode.index 8 (Decode.nullable Decode.string), Decode.succeed Nothing ])
+        |> custom (Decode.oneOf [ Decode.index 9 (Decode.nullable Decode.string), Decode.succeed Nothing ])
+        |> custom (Decode.index 2 string)
 
 
 photo service =

@@ -1,6 +1,8 @@
 module Page.Services.Filter__ exposing (Data, Model, Msg, page)
 
+import Breadcrumbs
 import DataSource exposing (DataSource)
+import Dict
 import Element exposing (centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
 import Head
@@ -101,12 +103,14 @@ view maybeUrl sharedModel static =
             , padding 10
             , spacing 10
             ]
-            (paragraph [ Font.semiBold ]
+            ([ Breadcrumbs.view "Back" sharedModel.history
+             , paragraph [ Font.semiBold ]
                 [ text filterText
                 ]
-                :: List.filterMap
+             ]
+                ++ List.filterMap
                     (Maybe.map (Service.listItem 1.7) << filterService selectedCategory)
-                    static.sharedData
+                    (Dict.values static.sharedData.services)
             )
         ]
     }
