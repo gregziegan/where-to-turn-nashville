@@ -49,11 +49,8 @@ page =
 
 routes : DataSource (List RouteParams)
 routes =
-    DataSource.Http.get
-        (Secrets.succeed
-            (Spreadsheet.url Organization.sheetId "A2:B")
-            |> Secrets.with "GOOGLE_API_KEY"
-        )
+    DataSource.Port.get "organizations"
+        (Json.Encode.string "meh")
         (Decode.field "values"
             (Decode.list
                 (Decode.index 0 Decode.int
@@ -65,26 +62,9 @@ routes =
 
 data : RouteParams -> DataSource Data
 data routeParams =
-    let
-        index =
-            case String.toInt routeParams.id of
-                Just id ->
-                    id + 1
-
-                Nothing ->
-                    0
-    in
-    DataSource.Port.get "organizations"
-        (Json.Encode.string "meh")
-        (Decode.field "values"
-            (Decode.list
-                Organization.decoder
-                |> Decode.map
-                    (\l ->
-                        List.Extra.find (\s -> s.id == index - 1) l
-                    )
-            )
-        )
+    DataSource.Port.get "organization"
+        (Json.Encode.string routeParams.id)
+        (Decode.nullable Organization.decoder)
 
 
 head :

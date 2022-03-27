@@ -1,6 +1,6 @@
 # Where to turn in Nashville
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/938bcfbf-a0d0-4a98-b82d-78fc804d0991/deploy-status)](https://app.netlify.com/sites/unruffled-agnesi-458e67/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/where-to-turn-nashville/deploy-status)](https://app.netlify.com/sites/where-to-turn-nashville/deploys)
 
 ## Development
 

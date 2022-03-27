@@ -10,6 +10,18 @@ const GOOGLE_API_KEY = process.env['GOOGLE_API_KEY'];
 
 const SPREADSHEET_RANGE = 'A2:P'
 
+var servicesSheet; 
+var organizationsSheet;
+
+function fetchSheet(sheetId) {
+    return fetch(sheetUrl(sheetId, SPREADSHEET_RANGE, GOOGLE_API_KEY))
+            .then(response => response.json());
+}
+
+function findById(id, sheet) {
+    return sheet['values'].filter(s => s[0] == id)[0];
+}
+
 module.exports =
 /**
  * @param { unknown } fromElm
@@ -17,11 +29,43 @@ module.exports =
  */
 {
     services: async function (args) {
-        return fetch(sheetUrl('Services', SPREADSHEET_RANGE, GOOGLE_API_KEY))
-            .then(response => response.json());
+        if (servicesSheet) {
+            return servicesSheet;
+        } else {
+            return fetchSheet('Services').then(sheet => {
+                servicesSheet = sheet;
+                return servicesSheet;
+            });
+        }
+    },
+    service: async function (serviceId) {
+        if (servicesSheet) {
+            return findById(serviceId, servicesSheet);
+        } else {
+            return fetchSheet('Services').then(sheet => {
+                servicesSheet = sheet;
+                return findById(serviceId, servicesSheet);
+            });
+        }
     },
     organizations: async function (args) {
-        return fetch(sheetUrl('Organizations', SPREADSHEET_RANGE, GOOGLE_API_KEY))
-            .then(response => response.json());
-    }
+        if (organizationsSheet) {
+            return organizationsSheet;
+        } else {
+            return fetchSheet('Organizations').then(sheet => {
+                organizationsSheet = sheet;
+                return organizationsSheet;
+            });
+        }
+    },
+    organization: async function (orgId) {
+        if (organizationsSheet) {
+            return findById(orgId, organizationsSheet);
+        } else {
+            return fetchSheet('Organizations').then(sheet => {
+                organizationsSheet = sheet;
+                return findById(orgId, organizationsSheet);
+            });
+        }
+    },
 }

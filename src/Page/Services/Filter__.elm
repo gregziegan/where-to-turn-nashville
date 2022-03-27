@@ -2,6 +2,7 @@ module Page.Services.Filter__ exposing (Data, Model, Msg, page)
 
 import DataSource exposing (DataSource)
 import DataSource.Http
+import DataSource.Port
 import Dict exposing (Dict)
 import Element exposing (Element, centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
@@ -9,6 +10,7 @@ import ElmTextSearch exposing (Index)
 import FontAwesome exposing (share)
 import Head
 import Head.Seo as Seo
+import Json.Encode
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
 import Page exposing (Page, PageWithState, StaticPayload)
@@ -71,13 +73,12 @@ data routeParams =
                     Nothing
                 )
         )
-        (DataSource.Http.get
-            (Secrets.succeed
-                (Spreadsheet.url Service.sheetId "A2:P")
-                |> Secrets.with "GOOGLE_API_KEY"
-            )
+        (DataSource.Port.get "services"
+            (Json.Encode.string "meh")
             (Decode.field "values"
-                (Decode.list Service.decoder |> Decode.map toDict)
+                (Decode.list Service.decoder
+                    |> Decode.map (\l -> Dict.fromList <| List.map (\s -> ( s.id, s )) l)
+                )
             )
         )
 
