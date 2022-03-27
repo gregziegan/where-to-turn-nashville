@@ -3,6 +3,7 @@ module Page.Organizations.Detail.Id_ exposing (Data, Model, Msg, page)
 import Breadcrumbs
 import DataSource exposing (DataSource)
 import DataSource.Http
+import DataSource.Port
 import Dict
 import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Font as Font
@@ -10,6 +11,8 @@ import Element.Input as Input
 import FontAwesome
 import Head
 import Head.Seo as Seo
+import Json.Encode
+import List.Extra
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
 import Page exposing (Page, PageWithState, StaticPayload)
@@ -62,7 +65,26 @@ routes =
 
 data : RouteParams -> DataSource Data
 data routeParams =
-    DataSource.succeed ()
+    let
+        index =
+            case String.toInt routeParams.id of
+                Just id ->
+                    id + 1
+
+                Nothing ->
+                    0
+    in
+    DataSource.Port.get "organizations"
+        (Json.Encode.string "meh")
+        (Decode.field "values"
+            (Decode.list
+                Organization.decoder
+                |> Decode.map
+                    (\l ->
+                        List.Extra.find (\s -> s.id == index - 1) l
+                    )
+            )
+        )
 
 
 head :
@@ -86,22 +108,7 @@ head static =
 
 
 type alias Data =
-    ()
-
-
-currentOrganization { organizations } params =
-    let
-        maybeOrganization =
-            params.id
-                |> String.toInt
-                |> Maybe.andThen (\id -> Dict.get id organizations)
-    in
-    case maybeOrganization of
-        Just organization ->
-            viewOrganization organization
-
-        Nothing ->
-            text "not found"
+    Maybe Organization
 
 
 viewSection children =
@@ -148,7 +155,12 @@ view maybeUrl sharedModel static =
             , padding 10
             , spacing 10
             ]
-            [ text "not found"
+            [ case static.data of
+                Just organization ->
+                    viewOrganization organization
+
+                Nothing ->
+                    Element.none
             ]
         ]
     }
