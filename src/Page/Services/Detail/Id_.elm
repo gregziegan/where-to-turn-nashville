@@ -78,9 +78,6 @@ data routeParams =
 
                 Nothing ->
                     0
-
-        notation =
-            "A" ++ String.fromInt index ++ ":P" ++ String.fromInt (index + 1)
     in
     DataSource.Port.get "services"
         (Json.Encode.string "meh")
@@ -93,6 +90,30 @@ data routeParams =
                     )
             )
         )
+        |> DataSource.andThen
+            (\maybeService ->
+                case maybeService of
+                    Just service ->
+                        DataSource.map2 Tuple.pair
+                            (DataSource.succeed maybeService)
+                            (DataSource.Port.get "organizations"
+                                (Json.Encode.string "meh")
+                                (Decode.field "values"
+                                    (Decode.list
+                                        Organization.decoder
+                                        |> Decode.map
+                                            (\l ->
+                                                List.Extra.find (\o -> o.name == service.organizationName) l
+                                            )
+                                    )
+                                )
+                            )
+
+                    Nothing ->
+                        DataSource.map2 Tuple.pair
+                            (DataSource.succeed maybeService)
+                            (DataSource.succeed Nothing)
+            )
 
 
 head :
@@ -116,7 +137,7 @@ head static =
 
 
 type alias Data =
-    Maybe Service
+    ( Maybe Service, Maybe Organization )
 
 
 viewDescription service =
@@ -195,15 +216,15 @@ websiteLink website =
         }
 
 
-viewService : Service -> Element Msg
-viewService service =
+viewService : Organization -> Service -> Element Msg
+viewService organization service =
     column [ width fill, spacing 10 ]
-        [ -- viewSection
-          -- [ link [] { url = "/organizations/detail/" ++ String.fromInt organization.id, label = paragraph [ Font.bold ] [ text organization.name ] }
-          -- , el [ alignLeft ] <| Element.html <| FontAwesome.iconWithOptions FontAwesome.infoCircle FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
-          -- , paragraph [ Font.italic ] [ text "Organization" ]
-          -- ]
-          viewSection
+        [ viewSection
+            [ link [] { url = "/organizations/detail/" ++ String.fromInt organization.id, label = paragraph [ Font.bold ] [ text organization.name ] }
+            , el [ alignLeft ] <| Element.html <| FontAwesome.iconWithOptions FontAwesome.infoCircle FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
+            , paragraph [ Font.italic ] [ text "Organization" ]
+            ]
+        , viewSection
             [ paragraph [] [ text <| Maybe.withDefault "" <| service.address ] ]
         , viewSection
             [ viewDescription service
@@ -223,13 +244,13 @@ viewService service =
         , row [ width fill ]
             [ column [ width fill, spacing 10 ]
                 [ directionsLink
+                , case organization.phone of
+                    Just phone ->
+                        callLink phone
 
-                -- , case organization.phone of
-                --     Just phone ->
-                --         callLink phone
-                --     Nothing ->
-                --         Element.none
-                -- , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
+                    Nothing ->
+                        Element.none
+                , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
                 , smsButton
                 , saveLink
                 ]
@@ -252,10 +273,10 @@ view maybeUrl sharedModel static =
             , spacing 10
             ]
             [ case static.data of
-                Just service ->
-                    viewService service
+                ( Just service, Just organization ) ->
+                    viewService organization service
 
-                Nothing ->
+                _ ->
                     text "Service not found"
             ]
         ]

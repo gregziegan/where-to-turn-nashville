@@ -6,6 +6,10 @@ const ID = "10tGJn9MCEJ10CraGIf7HP57phJ4FF5Jkw--JwOmkvA0"
 const sheetUrl = (sheetId, selection, apiKey) =>
     `${SHEETS_BASE}/${ID}/values/${sheetId}!${selection}?key=${apiKey}&valueRenderOption=UNFORMATTED_VALUE`
 
+const GOOGLE_API_KEY = process.env['GOOGLE_API_KEY'];
+
+const SPREADSHEET_RANGE = 'A2:P'
+
 module.exports =
 /**
  * @param { unknown } fromElm
@@ -13,14 +17,11 @@ module.exports =
  */
 {
     services: async function (args) {
-        console.log('services')
-        const token = process.env['GOOGLE_API_TOKEN'];
-        return fetch(sheetUrl('Services', 'A2:P', token))
+        return fetch(sheetUrl('Services', SPREADSHEET_RANGE, GOOGLE_API_KEY))
             .then(response => response.json());
     },
     organizations: async function (args) {
-        const token = process.env['GOOGLE_API_TOKEN'];
-        return fetch(sheetUrl('Organizations', 'A2:P', token))
+        return fetch(sheetUrl('Organizations', SPREADSHEET_RANGE, GOOGLE_API_KEY))
             .then(response => response.json());
     }
 }

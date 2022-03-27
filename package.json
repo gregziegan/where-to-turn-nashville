@@ -7,6 +7,9 @@
     "build": "elm-pages build",
     "test": "elm-test-rs"
   },
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  },
   "devDependencies": {
     "elm-optimize-level-2": "0.2.3",
     "elm-pages": "2.1.10",
