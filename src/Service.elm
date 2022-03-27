@@ -1,6 +1,6 @@
 module Service exposing (Category(..), Service, categories, categoryFromString, categoryToString, decoder, listItem, sheetId)
 
-import Element exposing (column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
+import Element exposing (Element, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
 import Element.Border as Border
 import Element.Font as Font
 import FontAwesome
@@ -236,6 +236,7 @@ distancePin distance =
         }
 
 
+listItem : Float -> Service -> Element msg
 listItem distance service =
     link []
         { url = "/services/detail/" ++ String.fromInt service.id

@@ -148,7 +148,7 @@ view maybeUrl sharedModel static =
             , padding 10
             , spacing 10
             ]
-            [ currentOrganization static.sharedData static.routeParams
+            [ text "not found"
             ]
         ]
     }

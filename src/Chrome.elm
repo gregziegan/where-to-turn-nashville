@@ -1,4 +1,4 @@
-module Chrome exposing (view)
+module Chrome exposing (Config, view)
 
 import Button
 import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, centerX, column, el, fill, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, width)
@@ -9,6 +9,7 @@ import Element.Input as Input
 import FontAwesome exposing (Style(..))
 import Html.Attributes
 import Palette
+import Search
 import Window exposing (Window)
 
 
@@ -25,13 +26,6 @@ logo =
 
 starredLink =
     Element.link [] { url = "/starred", label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.star }
-
-
-searchLink =
-    Element.link []
-        { url = "/search"
-        , label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.search
-        }
 
 
 menuLink label path =
@@ -89,8 +83,17 @@ viewMenuDrawer window toggleMenu =
         []
 
 
-view : { device : Device, showMobileMenu : Bool, toggleMobileMenu : msg, window : Window } -> Element msg
-view { device, showMobileMenu, toggleMobileMenu, window } =
+type alias Config msg =
+    { device : Device
+    , showMobileMenu : Bool
+    , toggleMobileMenu : msg
+    , window : Window
+    , searchConfig : Search.Config msg
+    }
+
+
+view : Config msg -> Element msg
+view { device, showMobileMenu, toggleMobileMenu, window, searchConfig } =
     row
         ([ width fill
          , spacing 5
@@ -115,7 +118,7 @@ view { device, showMobileMenu, toggleMobileMenu, window } =
 
             BigDesktop ->
                 Element.none
-        , Element.el [ centerX ] searchLink
+        , Element.el [ centerX ] (Search.box searchConfig)
         , Element.el [ centerX ] starredLink
         , Element.el [] logo
         ]

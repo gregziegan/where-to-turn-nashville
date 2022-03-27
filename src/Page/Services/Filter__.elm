@@ -1,17 +1,24 @@
 module Page.Services.Filter__ exposing (Data, Model, Msg, page)
 
-import Breadcrumbs
 import DataSource exposing (DataSource)
-import Dict
-import Element exposing (centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
+import DataSource.Http
+import Dict exposing (Dict)
+import Element exposing (Element, centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
+import ElmTextSearch exposing (Index)
+import FontAwesome exposing (share)
 import Head
 import Head.Seo as Seo
+import OptimizedDecoder as Decode
+import Organization exposing (Organization)
 import Page exposing (Page, PageWithState, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
+import Pages.Secrets as Secrets
 import Pages.Url
+import Search
 import Service exposing (Category, Service)
 import Shared
+import Spreadsheet
 import String.Extra
 import View exposing (View)
 
@@ -25,7 +32,8 @@ type alias Msg =
 
 
 type alias RouteParams =
-    { filter : Maybe String }
+    { filter : Maybe String
+    }
 
 
 page : Page RouteParams Data
@@ -40,12 +48,38 @@ page =
 
 routes : DataSource (List RouteParams)
 routes =
-    DataSource.succeed (RouteParams Nothing :: List.map (RouteParams << Just << Service.categoryToString) Service.categories)
+    DataSource.succeed
+        (RouteParams Nothing
+            :: List.map
+                (RouteParams << Just << Service.categoryToString)
+                Service.categories
+        )
 
 
 data : RouteParams -> DataSource Data
 data routeParams =
-    DataSource.succeed ()
+    DataSource.map
+        (\services ->
+            Data services
+                (if routeParams.filter == Nothing then
+                    Just
+                        (Tuple.first
+                            (Search.allServicesAdded (Dict.values services))
+                        )
+
+                 else
+                    Nothing
+                )
+        )
+        (DataSource.Http.get
+            (Secrets.succeed
+                (Spreadsheet.url Service.sheetId "A2:P")
+                |> Secrets.with "GOOGLE_API_KEY"
+            )
+            (Decode.field "values"
+                (Decode.list Service.decoder |> Decode.map toDict)
+            )
+        )
 
 
 head :
@@ -69,11 +103,19 @@ head static =
 
 
 type alias Data =
-    ()
+    { services : Dict Int Service
+    , searchIndex : Maybe (ElmTextSearch.Index Service)
+    }
 
 
-filterService : Maybe Category -> Service -> Maybe Service
-filterService category service =
+toDict entities =
+    entities
+        |> List.map (\e -> ( e.id, e ))
+        |> Dict.fromList
+
+
+filterServiceByCategory : Maybe Category -> Service -> Maybe Service
+filterServiceByCategory category service =
     if category == Nothing || category == Just service.category then
         Just service
 
@@ -81,15 +123,34 @@ filterService category service =
         Nothing
 
 
+viewSearchFilteredList : Dict Int Service -> Result String ( Index Service, List ( String, Float ) ) -> Element Msg
+viewSearchFilteredList services searchResult =
+    case searchResult of
+        Ok rankings ->
+            column [ spacing 20 ]
+                (List.filterMap
+                    (\( id, _ ) ->
+                        services
+                            |> Dict.get (Maybe.withDefault 0 <| String.toInt id)
+                            |> Maybe.map (Service.listItem 1.7)
+                    )
+                    (Tuple.second rankings)
+                )
+
+        Err str ->
+            text <| "No results matching search query. " ++ str
+
+
+viewList : StaticPayload Data RouteParams -> Element Msg
 viewList static =
     let
-        selectedCategory =
+        maybeCategory =
             Maybe.andThen Service.categoryFromString static.routeParams.filter
     in
     column [ spacing 20 ]
         (List.filterMap
-            (Maybe.map (Service.listItem 1.7) << filterService selectedCategory)
-            (Dict.values static.sharedData.services)
+            (Maybe.map (Service.listItem 1.7) << filterServiceByCategory maybeCategory)
+            (Dict.values static.data.services)
         )
 
 
@@ -101,7 +162,8 @@ view :
 view maybeUrl sharedModel static =
     let
         filterText =
-            Maybe.withDefault "All services" <| Maybe.map String.Extra.toSentenceCase static.routeParams.filter
+            Maybe.withDefault "All services" <|
+                Maybe.map String.Extra.toSentenceCase static.routeParams.filter
     in
     { title = "Where to turn in Nashville | " ++ filterText
     , body =
@@ -114,7 +176,13 @@ view maybeUrl sharedModel static =
             [ paragraph [ Font.semiBold ]
                 [ text filterText
                 ]
-            , viewList static
+            , case ( sharedModel.searchQuery, static.data.searchIndex ) of
+                ( Just query, Just searchIndex ) ->
+                    viewSearchFilteredList static.data.services
+                        (ElmTextSearch.search query searchIndex)
+
+                ( _, _ ) ->
+                    viewList static
             ]
         ]
     }

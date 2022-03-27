@@ -53,7 +53,7 @@ routes : DataSource (List RouteParams)
 routes =
     DataSource.Http.get
         (Secrets.succeed
-            (Spreadsheet.url Service.sheetId "A2:P")
+            (Spreadsheet.url Service.sheetId "A2:B")
             |> Secrets.with "GOOGLE_API_KEY"
         )
         (Decode.field "values"
@@ -67,7 +67,29 @@ routes =
 
 data : RouteParams -> DataSource Data
 data routeParams =
-    DataSource.succeed ()
+    let
+        index =
+            case String.toInt routeParams.id of
+                Just id ->
+                    id + 1
+
+                Nothing ->
+                    0
+
+        notation =
+            "A" ++ String.fromInt index ++ ":P" ++ String.fromInt (index + 1)
+    in
+    DataSource.Http.get
+        (Secrets.succeed
+            (Spreadsheet.url Service.sheetId notation)
+            |> Secrets.with "GOOGLE_API_KEY"
+        )
+        (Decode.field "values"
+            (Decode.list
+                Service.decoder
+                |> Decode.map (\l -> List.head l)
+            )
+        )
 
 
 head :
@@ -91,7 +113,7 @@ head static =
 
 
 type alias Data =
-    ()
+    Maybe Service
 
 
 viewDescription service =
@@ -170,15 +192,15 @@ websiteLink website =
         }
 
 
-viewService : Organization -> Service -> Element Msg
-viewService organization service =
+viewService : Service -> Element Msg
+viewService service =
     column [ width fill, spacing 10 ]
-        [ viewSection
-            [ link [] { url = "/organizations/detail/" ++ String.fromInt organization.id, label = paragraph [ Font.bold ] [ text organization.name ] }
-            , el [ alignLeft ] <| Element.html <| FontAwesome.iconWithOptions FontAwesome.infoCircle FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
-            , paragraph [ Font.italic ] [ text "Organization" ]
-            ]
-        , viewSection
+        [ -- viewSection
+          -- [ link [] { url = "/organizations/detail/" ++ String.fromInt organization.id, label = paragraph [ Font.bold ] [ text organization.name ] }
+          -- , el [ alignLeft ] <| Element.html <| FontAwesome.iconWithOptions FontAwesome.infoCircle FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
+          -- , paragraph [ Font.italic ] [ text "Organization" ]
+          -- ]
+          viewSection
             [ paragraph [] [ text <| Maybe.withDefault "" <| service.address ] ]
         , viewSection
             [ viewDescription service
@@ -198,43 +220,18 @@ viewService organization service =
         , row [ width fill ]
             [ column [ width fill, spacing 10 ]
                 [ directionsLink
-                , case organization.phone of
-                    Just phone ->
-                        callLink phone
 
-                    Nothing ->
-                        Element.none
-                , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
+                -- , case organization.phone of
+                --     Just phone ->
+                --         callLink phone
+                --     Nothing ->
+                --         Element.none
+                -- , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
                 , smsButton
                 , saveLink
                 ]
             ]
         ]
-
-
-currentService { organizations, services } params =
-    let
-        maybeService =
-            params.id
-                |> String.toInt
-                |> Maybe.andThen (\id -> Dict.get id services)
-
-        maybeOrganization =
-            maybeService
-                |> Maybe.andThen
-                    (\service ->
-                        organizations
-                            |> Dict.filter (\_ org -> org.name == service.organizationName)
-                            |> Dict.values
-                            |> List.head
-                    )
-    in
-    case ( maybeService, maybeOrganization ) of
-        ( Just service, Just organization ) ->
-            viewService organization service
-
-        _ ->
-            text "not found"
 
 
 view :
@@ -251,7 +248,12 @@ view maybeUrl sharedModel static =
             , padding 10
             , spacing 10
             ]
-            [ currentService static.sharedData static.routeParams
+            [ case static.data of
+                Just service ->
+                    viewService service
+
+                Nothing ->
+                    text "Service not found"
             ]
         ]
     }

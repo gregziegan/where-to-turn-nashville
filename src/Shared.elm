@@ -9,6 +9,7 @@ import DataSource.Http
 import Dict exposing (Dict)
 import Element exposing (el, fill, padding, width)
 import Element.Font as Font
+import ElmTextSearch
 import FontAwesome
 import Html exposing (Html)
 import OptimizedDecoder as Decode exposing (Decoder, int)
@@ -18,7 +19,9 @@ import Pages.Flags exposing (Flags(..))
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Secrets as Secrets
 import Path exposing (Path)
+import QueryParams
 import Route exposing (Route(..))
+import Search
 import Service exposing (Service)
 import SharedTemplate exposing (SharedTemplate)
 import Spreadsheet
@@ -46,6 +49,8 @@ type Msg
     | GoBack
     | ToggleMobileMenu
     | SetWindow Int Int
+    | OnSearchChange String
+    | OnSearch
 
 
 type SharedMsg
@@ -56,6 +61,7 @@ type alias Model =
     { showMobileMenu : Bool
     , navKey : Maybe Browser.Navigation.Key
     , window : Window
+    , searchQuery : Maybe String
     }
 
 
@@ -85,6 +91,13 @@ init navigationKey flags maybePagePath =
 
                 PreRenderFlags ->
                     { width = 600, height = 1000 }
+      , searchQuery =
+            maybePagePath
+                |> Maybe.andThen .pageUrl
+                |> Maybe.andThen .query
+                |> Maybe.map QueryParams.toDict
+                |> Maybe.andThen (Dict.get "search")
+                |> Maybe.andThen List.head
       }
     , Cmd.none
     )
@@ -116,6 +129,24 @@ update msg model =
         SetWindow width height ->
             ( { model | window = { width = width, height = height } }, Cmd.none )
 
+        OnSearchChange query ->
+            ( { model | searchQuery = Just query }, Cmd.none )
+
+        OnSearch ->
+            case model.searchQuery of
+                Just query ->
+                    ( model
+                    , case model.navKey of
+                        Just key ->
+                            Browser.Navigation.pushUrl key ("/services?search=" ++ query)
+
+                        Nothing ->
+                            Cmd.none
+                    )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
 
 subscriptions : Path -> Model -> Sub Msg
 subscriptions _ _ =
@@ -125,39 +156,12 @@ subscriptions _ _ =
 
 
 type alias Data =
-    { services : Dict Int Service
-    , organizations : Dict Int Organization
-    }
-
-
-toDict entities =
-    entities
-        |> List.map (\e -> ( e.id, e ))
-        |> Dict.fromList
+    ()
 
 
 data : DataSource Data
 data =
-    DataSource.map2
-        Data
-        (DataSource.Http.get
-            (Secrets.succeed
-                (Spreadsheet.url Service.sheetId "A2:P")
-                |> Secrets.with "GOOGLE_API_KEY"
-            )
-            (Decode.field "values"
-                (Decode.list Service.decoder |> Decode.map toDict)
-            )
-        )
-        (DataSource.Http.get
-            (Secrets.succeed
-                (Spreadsheet.url Organization.sheetId "A2:P")
-                |> Secrets.with "GOOGLE_API_KEY"
-            )
-            (Decode.field "values"
-                (Decode.list Organization.decoder |> Decode.map toDict)
-            )
-        )
+    DataSource.succeed ()
 
 
 view :
@@ -182,6 +186,11 @@ view sharedData page model toMsg pageView =
             , showMobileMenu = model.showMobileMenu
             , toggleMobileMenu = ToggleMobileMenu
             , window = model.window
+            , searchConfig =
+                { onChange = OnSearchChange
+                , onSearch = OnSearch
+                , query = Maybe.withDefault "" model.searchQuery
+                }
             }
             |> Element.map toMsg
         , case page.route of
