@@ -4,6 +4,7 @@ import Breadcrumbs
 import Button
 import DataSource exposing (DataSource)
 import DataSource.Http
+import DataSource.Port
 import Dict
 import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, newTabLink, padding, paragraph, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Font as Font
@@ -11,6 +12,8 @@ import Element.Input as Input
 import FontAwesome exposing (fontAwesome)
 import Head
 import Head.Seo as Seo
+import Json.Encode
+import List.Extra
 import Mask
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
@@ -79,15 +82,15 @@ data routeParams =
         notation =
             "A" ++ String.fromInt index ++ ":P" ++ String.fromInt (index + 1)
     in
-    DataSource.Http.get
-        (Secrets.succeed
-            (Spreadsheet.url Service.sheetId notation)
-            |> Secrets.with "GOOGLE_API_KEY"
-        )
+    DataSource.Port.get "services"
+        (Json.Encode.string "meh")
         (Decode.field "values"
             (Decode.list
                 Service.decoder
-                |> Decode.map (\l -> List.head l)
+                |> Decode.map
+                    (\l ->
+                        List.Extra.find (\s -> s.id == index - 1) l
+                    )
             )
         )
 
