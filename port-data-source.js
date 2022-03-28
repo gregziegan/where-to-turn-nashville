@@ -12,6 +12,7 @@ const SPREADSHEET_RANGE = 'A2:P'
 
 var servicesSheet; 
 var organizationsSheet;
+var searchIndex = null;
 
 function fetchSheet(sheetId) {
     return fetch(sheetUrl(sheetId, SPREADSHEET_RANGE, GOOGLE_API_KEY))
@@ -28,6 +29,16 @@ module.exports =
  * @returns { Promise<unknown> }
  */
 {
+    searchIndex: async function (index) {
+        if (index == null && searchIndex == null) {
+            return null;
+        } else if (index == null) {
+            return searchIndex;
+        } else {
+            searchIndex = index;
+            return searchIndex;
+        }
+    },
     services: async function (args) {
         if (servicesSheet) {
             return servicesSheet;

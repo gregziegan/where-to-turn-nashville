@@ -10,6 +10,7 @@ import ElmTextSearch exposing (Index)
 import FontAwesome exposing (share)
 import Head
 import Head.Seo as Seo
+import Json.Decode
 import Json.Encode
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
@@ -60,27 +61,39 @@ routes =
 
 data : RouteParams -> DataSource Data
 data routeParams =
-    DataSource.map
-        (\services ->
-            Data services
-                (if routeParams.filter == Nothing then
-                    Just
-                        (Tuple.first
-                            (Search.allServicesAdded (Dict.values services))
-                        )
-
-                 else
-                    Nothing
-                )
-        )
+    DataSource.map2 Data
         (DataSource.Port.get "services"
             (Json.Encode.string "meh")
             (Decode.field "values"
                 (Decode.list Service.decoder
-                    |> Decode.map (\l -> Dict.fromList <| List.map (\s -> ( s.id, s )) l)
+                    |> Decode.map
+                        (\l ->
+                            Dict.fromList <|
+                                List.map (\s -> ( s.id, s )) l
+                        )
                 )
             )
         )
+        (DataSource.Port.get "searchIndex"
+            Json.Encode.null
+            (Decode.map Search.fromCache (Decode.nullable Decode.string))
+        )
+        |> DataSource.andThen
+            (\{ services, searchIndex } ->
+                case searchIndex of
+                    Just _ ->
+                        DataSource.map2 Data
+                            (DataSource.succeed services)
+                            (DataSource.succeed searchIndex)
+
+                    Nothing ->
+                        DataSource.map2 Data
+                            (DataSource.succeed services)
+                            (DataSource.Port.get "searchIndex"
+                                (Json.Encode.string <| ElmTextSearch.storeToString (Tuple.first <| Search.allServicesAdded <| Dict.values services))
+                                (Decode.map Search.fromCache (Decode.nullable Decode.string))
+                            )
+            )
 
 
 head :
@@ -105,7 +118,7 @@ head static =
 
 type alias Data =
     { services : Dict Int Service
-    , searchIndex : Maybe (ElmTextSearch.Index Service)
+    , searchIndex : Maybe (Index Service)
     }
 
 

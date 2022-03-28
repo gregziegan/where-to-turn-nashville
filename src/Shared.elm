@@ -9,9 +9,10 @@ import DataSource.Http
 import Dict exposing (Dict)
 import Element exposing (el, fill, padding, width)
 import Element.Font as Font
-import ElmTextSearch
+import ElmTextSearch exposing (Index)
 import FontAwesome
 import Html exposing (Html)
+import Json.Decode
 import OptimizedDecoder as Decode exposing (Decoder, int)
 import OptimizedDecoder.Pipeline exposing (required)
 import Organization exposing (Organization)
@@ -81,9 +82,8 @@ init :
             }
     -> ( Model, Cmd Msg )
 init navigationKey flags maybePagePath =
-    ( { showMobileMenu = False
-      , navKey = navigationKey
-      , window =
+    let
+        window =
             case flags of
                 BrowserFlags value ->
                     Decode.decodeValue (Decode.field "window" Window.decoder) value
@@ -91,6 +91,10 @@ init navigationKey flags maybePagePath =
 
                 PreRenderFlags ->
                     { width = 600, height = 1000 }
+    in
+    ( { showMobileMenu = False
+      , navKey = navigationKey
+      , window = window
       , searchQuery =
             maybePagePath
                 |> Maybe.andThen .pageUrl
@@ -109,6 +113,12 @@ update msg model =
         OnPageChange urlPath ->
             ( { model
                 | showMobileMenu = False
+
+                -- , searchQuery =
+                --     if Maybe.withDefault True <| Maybe.map (String.contains "search") urlPath.query then
+                --         Nothing
+                --     else
+                --         model.searchQuery
               }
             , Cmd.none
             )
