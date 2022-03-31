@@ -90,7 +90,7 @@ data routeParams =
                         DataSource.map2 Data
                             (DataSource.succeed services)
                             (DataSource.Port.get "searchIndex"
-                                (Json.Encode.string <| ElmTextSearch.storeToString (Tuple.first <| Search.allServicesAdded <| Dict.values services))
+                                (Json.Encode.string <| ElmTextSearch.storeToString (Tuple.first <| Search.allServicesAdded <| List.take 10 <| Dict.values services))
                                 (Decode.map Search.fromCache (Decode.nullable Decode.string))
                             )
             )
