@@ -54,8 +54,11 @@ page =
 
 routes : DataSource (List RouteParams)
 routes =
-    DataSource.Port.get "services"
-        (Json.Encode.string "meh")
+    DataSource.Http.get
+        (Secrets.succeed
+            (Spreadsheet.url Service.sheetId "A2:B")
+            |> Secrets.with "GOOGLE_API_KEY"
+        )
         (Decode.field "values"
             (Decode.list
                 (Decode.index 0 Decode.int
@@ -67,9 +70,26 @@ routes =
 
 data : RouteParams -> DataSource Data
 data routeParams =
-    DataSource.Port.get "service"
-        (Json.Encode.string routeParams.id)
-        (Decode.nullable Service.decoder)
+    let
+        index =
+            case String.toInt routeParams.id of
+                Just id ->
+                    id + 1
+
+                Nothing ->
+                    0
+    in
+    DataSource.Port.get "services"
+        (Json.Encode.string "meh")
+        (Decode.field "values"
+            (Decode.list
+                Service.decoder
+                |> Decode.map
+                    (\l ->
+                        List.Extra.find (\s -> s.id == index - 1) l
+                    )
+            )
+        )
         |> DataSource.andThen
             (\maybeService ->
                 case maybeService of

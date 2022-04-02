@@ -2,7 +2,6 @@ module Page.Services.Filter__ exposing (Data, Model, Msg, page)
 
 import DataSource exposing (DataSource)
 import DataSource.Http
-import DataSource.Port
 import Dict exposing (Dict)
 import Element exposing (Element, centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
@@ -10,8 +9,6 @@ import ElmTextSearch exposing (Index)
 import FontAwesome exposing (share)
 import Head
 import Head.Seo as Seo
-import Json.Decode
-import Json.Encode
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
 import Page exposing (Page, PageWithState, StaticPayload)
@@ -61,39 +58,28 @@ routes =
 
 data : RouteParams -> DataSource Data
 data routeParams =
-    DataSource.map2 Data
-        (DataSource.Port.get "services"
-            (Json.Encode.string "meh")
-            (Decode.field "values"
-                (Decode.list Service.decoder
-                    |> Decode.map
-                        (\l ->
-                            Dict.fromList <|
-                                List.map (\s -> ( s.id, s )) l
+    DataSource.map
+        (\services ->
+            Data services
+                (if routeParams.filter == Nothing then
+                    Just
+                        (Tuple.first
+                            (Search.allServicesAdded (Dict.values services))
                         )
-                )
-            )
-        )
-        (DataSource.Port.get "searchIndex"
-            Json.Encode.null
-            (Decode.map Search.fromCache (Decode.nullable Decode.string))
-        )
-        |> DataSource.andThen
-            (\{ services, searchIndex } ->
-                case searchIndex of
-                    Just _ ->
-                        DataSource.map2 Data
-                            (DataSource.succeed services)
-                            (DataSource.succeed searchIndex)
 
-                    Nothing ->
-                        DataSource.map2 Data
-                            (DataSource.succeed services)
-                            (DataSource.Port.get "searchIndex"
-                                (Json.Encode.string <| ElmTextSearch.storeToString (Tuple.first <| Search.allServicesAdded <| List.take 10 <| Dict.values services))
-                                (Decode.map Search.fromCache (Decode.nullable Decode.string))
-                            )
+                 else
+                    Nothing
+                )
+        )
+        (DataSource.Http.get
+            (Secrets.succeed
+                (Spreadsheet.url Service.sheetId "A2:P")
+                |> Secrets.with "GOOGLE_API_KEY"
             )
+            (Decode.field "values"
+                (Decode.list Service.decoder |> Decode.map toDict)
+            )
+        )
 
 
 head :
@@ -118,7 +104,7 @@ head static =
 
 type alias Data =
     { services : Dict Int Service
-    , searchIndex : Maybe (Index Service)
+    , searchIndex : Maybe (ElmTextSearch.Index Service)
     }
 
 
