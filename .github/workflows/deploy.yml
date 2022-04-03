@@ -89,7 +89,7 @@ jobs:
           max_attempts: 3
           timeout_minutes: 3
           retry_on: error
-          command: npm install && npm run build
+          command: npm install && npm run build -- --keep-cache
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           VERSION: ${{ needs.compute_tags.outputs.release_tag }}
