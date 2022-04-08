@@ -1,14 +1,17 @@
 module Chrome exposing (Config, view)
 
-import Button
-import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, centerX, column, el, fill, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, width)
+import Breadcrumbs
+import Browser.Navigation
+import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, alignTop, centerX, clipY, column, el, fill, fillPortion, height, link, maximum, padding, paddingXY, paragraph, px, row, scrollbarY, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import FontAwesome exposing (Style(..))
-import Html.Attributes
+import Html.Attributes as Attrs
 import Palette
+import Path exposing (Path)
+import Route exposing (Route(..))
 import Search
 import Window exposing (Window)
 
@@ -25,7 +28,10 @@ logo =
 
 
 starredLink =
-    Element.link [] { url = "/starred", label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.star }
+    Element.link []
+        { url = "/starred"
+        , label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.star
+        }
 
 
 menuLink label path =
@@ -58,13 +64,13 @@ viewMenuDrawer window toggleMenu =
         [ width fill
         , height (px window.height)
         , Background.color Palette.gray
-        , Element.htmlAttribute (Html.Attributes.style "z-index" "1")
+        , Element.htmlAttribute (Attrs.style "z-index" "1")
         , Element.inFront
             (column
                 [ width (fill |> maximum 250)
                 , Background.color Palette.white
                 , paddingXY 10 20
-                , Element.htmlAttribute (Html.Attributes.style "z-index" "2")
+                , Element.htmlAttribute (Attrs.style "z-index" "2")
                 , Border.width 2
                 , spacing 5
                 , height fill
@@ -83,42 +89,165 @@ viewMenuDrawer window toggleMenu =
         []
 
 
+viewPersistentMenu config =
+    column
+        [ width (fillPortion 1)
+        , alignTop
+        , height fill
+
+        -- , Border.widthEach { top = 0, bottom = 0, right = 1, left = 0 }
+        ]
+        (List.map viewMenuLink menuLinks)
+
+
 type alias Config msg =
     { device : Device
     , showMobileMenu : Bool
     , toggleMobileMenu : msg
     , window : Window
     , searchConfig : Search.Config msg
+    , navKey : Maybe Browser.Navigation.Key
+    , page :
+        { path : Path
+        , route : Maybe Route
+        }
+    , goBack : msg
+    , content : List (Element msg)
+    , showMobileSearch : Bool
     }
 
 
-view : Config msg -> Element msg
-view { device, showMobileMenu, toggleMobileMenu, window, searchConfig } =
+viewBackLink { goBack, navKey, page } =
+    case page.route of
+        Just Index ->
+            Element.none
+
+        Just _ ->
+            Breadcrumbs.view "Back" navKey goBack
+                |> el [ padding 10 ]
+
+        Nothing ->
+            Element.none
+
+
+viewMobile config =
+    column
+        [ width (fill |> maximum config.window.width)
+        ]
+        (viewNavBar True config
+            :: (if config.showMobileSearch then
+                    Element.el
+                        [ width fill
+                        , paddingXY 20 10
+                        ]
+                        (Search.box config.searchConfig)
+
+                else
+                    Element.none
+               )
+            :: config.content
+        )
+
+
+navBarHeight =
+    80
+
+
+viewNavBar isMobile { window, showMobileMenu, toggleMobileMenu, searchConfig } =
     row
         ([ width fill
-         , spacing 5
+         , height (px navBarHeight)
          , padding 10
+         , alignTop
+         , Element.htmlAttribute (Attrs.style "position" "sticky")
+         , Element.htmlAttribute (Attrs.style "top" "0")
+         , Element.htmlAttribute (Attrs.style "left" "0")
+         , Element.htmlAttribute (Attrs.style "z-index" "1")
+         , Background.color Palette.white
+         , Border.widthEach { top = 0, bottom = 1, left = 0, right = 0 }
          ]
-            ++ (if showMobileMenu then
+            ++ (if isMobile && showMobileMenu then
                     [ Element.inFront (viewMenuDrawer window toggleMobileMenu) ]
 
                 else
                     []
                )
         )
-        [ case device.class of
-            Phone ->
-                menuButton toggleMobileMenu
+        [ if isMobile then
+            menuButton toggleMobileMenu
 
-            Tablet ->
-                menuButton toggleMobileMenu
+          else
+            Element.none
+        , if isMobile then
+            Element.el
+                [ width fill
+                , padding 10
+                ]
+                (Element.el [ alignRight ] (Search.button searchConfig))
 
-            Desktop ->
-                Element.none
-
-            BigDesktop ->
-                Element.none
-        , Element.el [ centerX ] (Search.box searchConfig)
-        , Element.el [ centerX ] starredLink
-        , Element.el [] logo
+          else
+            Element.el
+                [ width (fill |> maximum 600)
+                , padding 10
+                , centerX
+                ]
+                (Search.box searchConfig)
+        , row
+            [ width (fill |> maximum 300)
+            , spacing 10
+            , height fill
+            , alignRight
+            ]
+            [ Element.el [ alignRight ] starredLink
+            , Element.el [] logo
+            ]
         ]
+
+
+paneHeight config =
+    config.window.height - navBarHeight
+
+
+viewPanes config =
+    row
+        [ width fill
+        , padding 10
+        , spacing 10
+        , height (px (paneHeight config))
+        ]
+        [ viewPersistentMenu config
+        , column
+            [ width <| fillPortion 3
+            , height fill
+            , clipY
+            , scrollbarY
+            ]
+            (viewBackLink config :: config.content)
+        ]
+
+
+viewDesktop config =
+    column
+        [ width fill
+
+        -- , height (fill |> maximum config.window.height)
+        ]
+        [ viewNavBar False config
+        , viewPanes config
+        ]
+
+
+view : Config msg -> Element msg
+view config =
+    case config.device.class of
+        Phone ->
+            viewMobile config
+
+        Tablet ->
+            viewMobile config
+
+        Desktop ->
+            viewDesktop config
+
+        BigDesktop ->
+            viewDesktop config

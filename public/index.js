@@ -7,6 +7,10 @@ export default {
     console.log("App loaded", app);
   },
   flags: function () {
-    return "You can decode this in Shared.elm using Json.Decode.string!";
+    var dimensions = { 'width': window.innerWidth, 'height': window.innerHeight };
+
+    return {
+      'window': dimensions
+    };
   },
 };

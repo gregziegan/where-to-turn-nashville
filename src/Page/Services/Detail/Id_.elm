@@ -267,8 +267,7 @@ view maybeUrl sharedModel static =
     { title = "Where to turn in Nashville | Service"
     , body =
         [ column
-            [ centerX
-            , width (fill |> maximum 1200)
+            [ width fill
             , padding 10
             , spacing 10
             ]

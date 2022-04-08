@@ -1,4 +1,4 @@
-module Service exposing (Category(..), Service, categories, categoryFromString, categoryToString, decoder, listItem, sheetId)
+module Service exposing (Category(..), Service, categories, categoryFromString, categoryToString, decoder, largeListItem, listItem, sheetId)
 
 import Element exposing (Element, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
 import Element.Border as Border
@@ -210,16 +210,23 @@ decoder =
 
 
 photo service =
-    el [] (Element.html <| FontAwesome.icon FontAwesome.infoCircle)
+    el
+        [ padding 10
+        ]
+        (Element.html <| FontAwesome.icon FontAwesome.infoCircle)
 
 
 briefDescription service =
+    String.join " " <| List.take 10 <| String.words service.description
+
+
+briefDescriptionColumn service =
     textColumn [ width (fill |> maximum 250) ]
         [ paragraph [ Font.size 14 ]
             [ text service.organizationName
             ]
         , paragraph [ Font.size 12 ]
-            [ text <| String.join " " <| List.take 10 <| String.words service.description ]
+            [ text (briefDescription service) ]
         ]
 
 
@@ -236,20 +243,43 @@ distancePin distance =
         }
 
 
+itemLink service children =
+    link [ width fill ]
+        { url = "/services/detail/" ++ String.fromInt service.id
+        , label = children
+        }
+
+
 listItem : Float -> Service -> Element msg
 listItem distance service =
-    link []
-        { url = "/services/detail/" ++ String.fromInt service.id
-        , label =
-            row
-                [ spacing 10
-                , padding 10
-                , height (px 100)
-                , width (fill |> minimum 355 |> maximum 1000)
-                , Border.width 1
-                ]
-                [ photo service
-                , briefDescription service
-                , distancePin distance
-                ]
-        }
+    itemLink service
+        (row
+            [ spacing 10
+            , padding 10
+            , height (px 100)
+            , width (fill |> minimum 355 |> maximum 1000)
+            , Border.width 1
+            ]
+            [ photo service
+            , briefDescriptionColumn service
+            , distancePin distance
+            ]
+        )
+
+
+largeListItem : Float -> Service -> Element msg
+largeListItem distance service =
+    itemLink service
+        (row
+            [ spaceEvenly
+            , padding 10
+            , height (px 100)
+            , width fill
+            , Border.width 1
+            ]
+            [ photo service
+            , paragraph [ Font.center, padding 10 ] [ text service.organizationName ]
+            , paragraph [ padding 10 ] [ text (briefDescription service) ]
+            , distancePin distance
+            ]
+        )

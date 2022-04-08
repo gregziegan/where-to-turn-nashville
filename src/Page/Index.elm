@@ -1,7 +1,7 @@
 module Page.Index exposing (Data, Model, Msg, page)
 
 import DataSource exposing (DataSource)
-import Element exposing (alignRight, centerX, column, el, fill, height, maximum, padding, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
+import Element exposing (alignRight, alignTop, centerX, column, el, fill, height, maximum, padding, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -149,8 +149,9 @@ view maybeUrl sharedModel static =
     { title = "Where to turn in Nashville"
     , body =
         [ column
-            [ centerX
-            , width (fill |> maximum 1200)
+            [ alignTop
+            , width fill
+            , height fill
             , padding 10
             , spacing 10
             ]

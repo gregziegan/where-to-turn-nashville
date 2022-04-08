@@ -3,7 +3,7 @@ module Page.Services.Filter__ exposing (Data, Model, Msg, page)
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Dict exposing (Dict)
-import Element exposing (Element, centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
+import Element exposing (DeviceClass(..), Element, centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
 import ElmTextSearch exposing (Index)
 import FontAwesome exposing (share)
@@ -123,16 +123,16 @@ filterServiceByCategory category service =
         Nothing
 
 
-viewSearchFilteredList : Dict Int Service -> Result String ( Index Service, List ( String, Float ) ) -> Element Msg
-viewSearchFilteredList services searchResult =
+viewSearchFilteredList : (Service -> Element Msg) -> Dict Int Service -> Result String ( Index Service, List ( String, Float ) ) -> Element Msg
+viewSearchFilteredList toItem services searchResult =
     case searchResult of
         Ok rankings ->
-            column [ spacing 20 ]
+            column [ spacing 20, width fill ]
                 (List.filterMap
                     (\( id, _ ) ->
                         services
                             |> Dict.get (Maybe.withDefault 0 <| String.toInt id)
-                            |> Maybe.map (Service.listItem 1.7)
+                            |> Maybe.map toItem
                     )
                     (Tuple.second rankings)
                 )
@@ -141,17 +141,60 @@ viewSearchFilteredList services searchResult =
             text <| "No results matching search query. " ++ str
 
 
-viewList : StaticPayload Data RouteParams -> Element Msg
-viewList static =
+viewList : (Service -> Element Msg) -> StaticPayload Data RouteParams -> Element Msg
+viewList toItem static =
     let
         maybeCategory =
             Maybe.andThen Service.categoryFromString static.routeParams.filter
     in
-    column [ spacing 20 ]
+    column [ spacing 20, width fill ]
         (List.filterMap
-            (Maybe.map (Service.listItem 1.7) << filterServiceByCategory maybeCategory)
+            (Maybe.map toItem << filterServiceByCategory maybeCategory)
             (Dict.values static.data.services)
         )
+
+
+viewMobile filterText sharedModel static =
+    [ column
+        [ width (fill |> maximum 1200)
+        , padding 10
+        , spacing 10
+        ]
+        [ paragraph [ Font.semiBold ]
+            [ text filterText
+            ]
+        , case ( sharedModel.searchQuery, static.data.searchIndex ) of
+            ( Just query, Just searchIndex ) ->
+                viewSearchFilteredList (Service.listItem 1.7)
+                    static.data.services
+                    (ElmTextSearch.search query searchIndex)
+
+            ( _, _ ) ->
+                viewList (Service.listItem 1.7) static
+        ]
+    ]
+
+
+viewDesktop filterText sharedModel static =
+    [ column
+        [ width fill
+        , padding 10
+        , spacing 10
+        ]
+        [ paragraph [ Font.semiBold ]
+            [ text filterText
+            ]
+        , case ( sharedModel.searchQuery, static.data.searchIndex ) of
+            ( Just query, Just searchIndex ) ->
+                viewSearchFilteredList
+                    (Service.largeListItem 1.7)
+                    static.data.services
+                    (ElmTextSearch.search query searchIndex)
+
+            ( _, _ ) ->
+                viewList (Service.largeListItem 1.7) static
+        ]
+    ]
 
 
 view :
@@ -164,25 +207,26 @@ view maybeUrl sharedModel static =
         filterText =
             Maybe.withDefault "All services" <|
                 Maybe.map String.Extra.toSentenceCase static.routeParams.filter
+
+        device =
+            Element.classifyDevice sharedModel.window
     in
     { title = "Where to turn in Nashville | " ++ filterText
     , body =
-        [ column
-            [ centerX
-            , width (fill |> maximum 1200)
-            , padding 10
-            , spacing 10
-            ]
-            [ paragraph [ Font.semiBold ]
-                [ text filterText
-                ]
-            , case ( sharedModel.searchQuery, static.data.searchIndex ) of
-                ( Just query, Just searchIndex ) ->
-                    viewSearchFilteredList static.data.services
-                        (ElmTextSearch.search query searchIndex)
+        (case device.class of
+            Phone ->
+                viewMobile
 
-                ( _, _ ) ->
-                    viewList static
-            ]
-        ]
+            Tablet ->
+                viewMobile
+
+            Desktop ->
+                viewDesktop
+
+            BigDesktop ->
+                viewDesktop
+        )
+            filterText
+            sharedModel
+            static
     }

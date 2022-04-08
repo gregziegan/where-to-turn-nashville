@@ -1,4 +1,4 @@
-module Search exposing (Config, allServicesAdded, box)
+module Search exposing (Config, allServicesAdded, box, button)
 
 import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, centerX, column, el, fill, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, width)
 import Element.Background as Background
@@ -35,6 +35,7 @@ type alias Config msg =
     { onChange : String -> msg
     , onSearch : msg
     , query : String
+    , toggleMobile : msg
     }
 
 
@@ -55,17 +56,30 @@ onEnter msg =
         )
 
 
+button : Config msg -> Element msg
+button { toggleMobile } =
+    Input.button
+        [ width (px 35) ]
+        { label = viewIcon
+        , onPress = Just toggleMobile
+        }
+
+
+viewIcon =
+    FontAwesome.icon FontAwesome.search
+        |> Element.html
+        |> Element.el [ width (px 20) ]
+
+
 box : Config msg -> Element msg
 box config =
     row
-        [ padding 10
-        , spacing 10
+        [ spacing 10
+        , width fill
         , onEnter config.onSearch
         ]
-        [ FontAwesome.icon FontAwesome.search
-            |> Element.html
-            |> Element.el []
-        , Input.search []
+        [ viewIcon
+        , Input.search [ width fill ]
             { onChange = config.onChange
             , text = config.query
             , label = Input.labelHidden "Search"

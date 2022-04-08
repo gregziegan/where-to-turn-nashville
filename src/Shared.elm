@@ -1,13 +1,12 @@
 module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
-import Breadcrumbs
 import Browser.Events exposing (onResize)
 import Browser.Navigation
 import Chrome
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Dict exposing (Dict)
-import Element exposing (el, fill, padding, width)
+import Element exposing (DeviceClass(..), el, fill, padding, width)
 import Element.Font as Font
 import ElmTextSearch
 import FontAwesome
@@ -48,6 +47,7 @@ type Msg
         }
     | GoBack
     | ToggleMobileMenu
+    | ToggleMobileSearch
     | SetWindow Int Int
     | OnSearchChange String
     | OnSearch
@@ -59,6 +59,7 @@ type SharedMsg
 
 type alias Model =
     { showMobileMenu : Bool
+    , showMobileSearch : Bool
     , navKey : Maybe Browser.Navigation.Key
     , window : Window
     , searchQuery : Maybe String
@@ -82,6 +83,7 @@ init :
     -> ( Model, Cmd Msg )
 init navigationKey flags maybePagePath =
     ( { showMobileMenu = False
+      , showMobileSearch = False
       , navKey = navigationKey
       , window =
             case flags of
@@ -125,6 +127,9 @@ update msg model =
 
         ToggleMobileMenu ->
             ( { model | showMobileMenu = not model.showMobileMenu }, Cmd.none )
+
+        ToggleMobileSearch ->
+            ( { model | showMobileSearch = not model.showMobileSearch }, Cmd.none )
 
         SetWindow width height ->
             ( { model | window = { width = width, height = height } }, Cmd.none )
@@ -184,28 +189,23 @@ view sharedData page model toMsg pageView =
         , Chrome.view
             { device = device
             , showMobileMenu = model.showMobileMenu
-            , toggleMobileMenu = ToggleMobileMenu
+            , toggleMobileMenu = toMsg ToggleMobileMenu
             , window = model.window
             , searchConfig =
-                { onChange = OnSearchChange
-                , onSearch = OnSearch
+                { onChange = toMsg << OnSearchChange
+                , onSearch = toMsg OnSearch
                 , query = Maybe.withDefault "" model.searchQuery
+                , toggleMobile = toMsg ToggleMobileSearch
                 }
+            , navKey = model.navKey
+            , page = page
+            , goBack = toMsg GoBack
+            , showMobileSearch = model.showMobileSearch
+            , content = pageView.body
             }
-            |> Element.map toMsg
-        , case page.route of
-            Just Index ->
-                Element.none
 
-            Just _ ->
-                Breadcrumbs.view "Back" model.navKey GoBack
-                    |> el [ padding 10 ]
-                    |> Element.map toMsg
-
-            Nothing ->
-                Element.none
+        -- |> Element.map toMsg
         ]
-            ++ pageView.body
             |> Element.column
                 [ width fill
                 , Font.family [ Font.typeface "system" ]
