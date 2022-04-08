@@ -1,7 +1,7 @@
 module Page.Index exposing (Data, Model, Msg, page)
 
 import DataSource exposing (DataSource)
-import Element exposing (alignRight, alignTop, centerX, column, el, fill, height, maximum, padding, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
+import Element exposing (alignLeft, alignRight, alignTop, centerX, column, el, fill, fillPortion, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -72,7 +72,7 @@ viewFilterLink index filter =
         ( icon, title ) =
             filterDetails filter
     in
-    Element.link []
+    Element.link [ width fill ]
         { url = "/services/" ++ Service.categoryToString filter
         , label =
             Input.button
@@ -140,6 +140,64 @@ filterDetails filter =
             ( FontAwesome.wifi, "Internet" )
 
 
+viewWelcomeBanner =
+    row [ width fill ]
+        [ textColumn [ width fill ]
+            [ paragraph [ Font.center, Font.size 16 ]
+                [ text <| String.toUpper "Where to turn in Nashville"
+                ]
+            , paragraph [ Font.center, Font.size 12 ]
+                [ text <| "A guide to navigating resources in Middle Tennessee" ]
+            ]
+        ]
+
+
+viewHelpBanner =
+    row
+        [ width fill
+        ]
+        [ column
+            [ width fill
+            , padding 10
+            , Border.width 1
+            , Border.rounded 5
+            ]
+            [ row
+                [ width fill
+                , spacing 10
+                ]
+                [ textColumn [ width (fillPortion 20) ]
+                    [ paragraph
+                        [ width fill
+                        , Font.center
+                        , Font.size 16
+                        ]
+                        [ text "Not sure where to start?"
+                        ]
+                    , paragraph
+                        [ width fill
+                        , Font.center
+                        , Font.size 12
+                        ]
+                        [ text "Answer questions to help us find the best resources for you." ]
+                    ]
+                , link [ width (fillPortion 1) ]
+                    { url = "/help"
+                    , label =
+                        Input.button
+                            [ Border.width 1
+                            , centerX
+                            , padding 10
+                            ]
+                            { label = text "Find help"
+                            , onPress = Nothing
+                            }
+                    }
+                ]
+            ]
+        ]
+
+
 view :
     Maybe PageUrl
     -> Shared.Model
@@ -152,19 +210,16 @@ view maybeUrl sharedModel static =
             [ alignTop
             , width fill
             , height fill
+            , spacing 20
             , padding 10
-            , spacing 10
             ]
-            [ row [ width fill ]
-                [ textColumn [ width fill, padding 10 ]
-                    [ paragraph [ Font.center, Font.size 16 ]
-                        [ text <| String.toUpper "Where to turn in Nashville"
-                        ]
-                    , paragraph [ Font.center, Font.size 12 ]
-                        [ text <| "A guide to navigating resources in Middle Tennessee" ]
-                    ]
+            [ viewWelcomeBanner
+            , viewHelpBanner
+            , wrappedRow
+                [ width fill
+                , spacing 5
                 ]
-            , wrappedRow [ spacing 5 ] (List.indexedMap viewFilterLink Service.categories)
+                (List.indexedMap viewFilterLink Service.categories)
             ]
         ]
     }
