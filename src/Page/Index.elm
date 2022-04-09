@@ -67,7 +67,7 @@ type alias Data =
     ()
 
 
-viewFilterLink index filter =
+viewFilterLink filter =
     let
         ( icon, title ) =
             filterDetails filter
@@ -76,19 +76,13 @@ viewFilterLink index filter =
         { url = "/services/" ++ Service.categoryToString filter
         , label =
             Input.button
-                ([ width (px 170)
-                 , height (px 100)
-                 , Border.width 1
-                 , spacing 5
-                 , padding 10
-                 ]
-                    ++ (if index == 0 then
-                            [ Input.focusedOnLoad ]
-
-                        else
-                            []
-                       )
-                )
+                [ width (px 150)
+                , height (px 100)
+                , Border.width 1
+                , Border.rounded 15
+                , spacing 5
+                , padding 10
+                ]
                 { onPress = Nothing
                 , label =
                     row [ width fill, centerX, spacing 10 ]
@@ -103,41 +97,101 @@ viewFilterLink index filter =
 
 filterDetails filter =
     case filter of
-        Shelter ->
-            ( FontAwesome.bed, "Shelter" )
-
         Food ->
             ( FontAwesome.utensils, "Food" )
 
-        Healthcare ->
-            ( FontAwesome.heartbeat, "Healthcare" )
+        Housing ->
+            ( FontAwesome.bed, "Housing" )
 
-        ShowersAndRestrooms ->
-            ( FontAwesome.shower, "Showers and restrooms" )
+        PersonalCare ->
+            ( FontAwesome.shower, "Personal care" )
 
-        Childcare ->
-            ( FontAwesome.child, "Childcare" )
+        RentAndUtilitiesAssistance ->
+            ( FontAwesome.creditCard, "Rent and utilities assistance" )
 
-        DomesticViolence ->
-            ( FontAwesome.exclamationTriangle, "Domestic violence" )
+        MedicalCare ->
+            ( FontAwesome.medkit, "Medical care" )
+
+        MentalHealth ->
+            ( FontAwesome.notesMedical, "Mental health" )
+
+        AddictionServices ->
+            ( FontAwesome.prescriptionBottle, "Addiction services" )
+
+        NursingHomesAndHospice ->
+            ( FontAwesome.bed, "Nursing homes and hospice" )
+
+        DentalAndHearing ->
+            ( FontAwesome.tooth, "Dental and hearing" )
+
+        HivPrepHepC ->
+            ( FontAwesome.ribbon, "HIV, PrEP, and Hep C" )
+
+        Transportation ->
+            ( FontAwesome.bus, "Transportation" )
+
+        Internet ->
+            ( FontAwesome.wifi, "Internet" )
+
+        Phones ->
+            ( FontAwesome.phone, "Phones" )
 
         LegalAid ->
             ( FontAwesome.balanceScale, "Legal aid" )
 
-        FinancialAid ->
-            ( FontAwesome.creditCard, "Financial aid" )
+        DomesticViolence ->
+            ( FontAwesome.exclamationTriangle, "Domestic violence" )
 
-        JobsAndEducation ->
-            ( FontAwesome.briefcase, "Jobs and education" )
+        SexualAssault ->
+            ( FontAwesome.exclamationTriangle, "Sexual assault" )
 
-        LgbtqPlus ->
+        IDsAndSSI ->
+            ( FontAwesome.idCard, "IDs and SSI" )
+
+        JobsAndJobTraining ->
+            ( FontAwesome.briefcase, "Jobs and job training" )
+
+        AdultEducation ->
+            ( FontAwesome.school, "Adult education" )
+
+        TutorsAndMentoring ->
+            ( FontAwesome.school, "Tutors and mentoring" )
+
+        Childcare ->
+            ( FontAwesome.hands, "Childcare" )
+
+        ParentingHelp ->
+            ( FontAwesome.handHoldingBox, "Parenting help" )
+
+        SeniorsAndDisabilities ->
+            ( FontAwesome.wheelchair, "Seniors and people with disabilities" )
+
+        LGBTQPlus ->
             ( FontAwesome.flag, "LGBTQ+" )
 
-        RentersAssistance ->
-            ( FontAwesome.user, "Renters' assistance" )
+        Veterans ->
+            ( FontAwesome.medal, "Veterans" )
 
-        Internet ->
-            ( FontAwesome.wifi, "Internet" )
+        ImmigrantsAndRefugees ->
+            ( FontAwesome.globeAfrica, "Immigrants and refugees" )
+
+        FormerlyIncarcerated ->
+            ( FontAwesome.box, "Formerly incarcerated" )
+
+        OnSexOffenderRegistry ->
+            ( FontAwesome.list, "On sex offender registry" )
+
+        PetHelp ->
+            ( FontAwesome.deployDog, "Pet help" )
+
+        OutsideOfDavidsonCounty ->
+            ( FontAwesome.mapSigns, "Outside of Davidson Co." )
+
+        Arts ->
+            ( FontAwesome.play, "Arts" )
+
+        Advocacy ->
+            ( FontAwesome.handshake, "Advocacy" )
 
 
 viewWelcomeBanner =
@@ -160,7 +214,7 @@ viewHelpBanner =
             [ width fill
             , padding 10
             , Border.width 1
-            , Border.rounded 5
+            , Border.rounded 15
             ]
             [ row
                 [ width fill
@@ -198,6 +252,30 @@ viewHelpBanner =
         ]
 
 
+viewGroup title categories =
+    column
+        [ width fill
+        , padding 20
+        , Border.width 1
+        , Border.rounded 15
+        , spacing 10
+        ]
+        [ paragraph [] [ text title ]
+        , wrappedRow [ spacing 10 ] (List.map viewFilterLink categories)
+        ]
+
+
+viewGroupAlt title categories =
+    column
+        [ width fill
+        , padding 20
+        , spacing 10
+        ]
+        [ paragraph [ Font.center ] [ text title ]
+        , wrappedRow [ centerX, spacing 10 ] (List.map viewFilterLink categories)
+        ]
+
+
 view :
     Maybe PageUrl
     -> Shared.Model
@@ -210,16 +288,23 @@ view maybeUrl sharedModel static =
             [ alignTop
             , width fill
             , height fill
-            , spacing 20
             , padding 10
             ]
-            [ viewWelcomeBanner
-            , viewHelpBanner
-            , wrappedRow
-                [ width fill
-                , spacing 5
+            [ column
+                [ width (fill |> maximum 800)
+                , spacing 20
                 ]
-                (List.indexedMap viewFilterLink Service.categories)
+                [ viewWelcomeBanner
+                , viewHelpBanner
+                , viewGroup "Urgent needs" Service.urgentNeeds
+                , viewGroup "Get care" Service.care
+                , viewGroupAlt "Get connected" Service.connectivity
+                , viewGroup "Get help" Service.help
+                , viewGroupAlt "Find work" Service.work
+                , viewGroup "Family and youth resources" Service.familyAndYouth
+                , viewGroup "Resources for" Service.forGroups
+                , viewGroupAlt "More" Service.other
+                ]
             ]
         ]
     }

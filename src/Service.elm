@@ -1,4 +1,4 @@
-module Service exposing (Category(..), Service, categories, categoryFromString, categoryToString, decoder, largeListItem, listItem, sheetId)
+module Service exposing (Category(..), Service, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, forGroups, help, largeListItem, listItem, other, sheetId, urgentNeeds, work)
 
 import Element exposing (Element, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
 import Element.Border as Border
@@ -15,74 +15,174 @@ sheetId =
 
 
 type Category
-    = Shelter
-    | Food
-    | Healthcare
-    | ShowersAndRestrooms
-    | Childcare
-    | DomesticViolence
-    | LegalAid
-    | FinancialAid
-    | JobsAndEducation
-    | LgbtqPlus
-    | RentersAssistance
+    = Food
+    | Housing
+    | PersonalCare
+    | RentAndUtilitiesAssistance
+    | MedicalCare
+    | MentalHealth
+    | AddictionServices
+    | NursingHomesAndHospice
+    | DentalAndHearing
+    | HivPrepHepC
+    | Transportation
     | Internet
+    | Phones
+    | LegalAid
+    | DomesticViolence
+    | SexualAssault
+    | IDsAndSSI
+    | JobsAndJobTraining
+    | AdultEducation
+    | TutorsAndMentoring
+    | Childcare
+    | ParentingHelp
+    | SeniorsAndDisabilities
+    | LGBTQPlus
+    | Veterans
+    | ImmigrantsAndRefugees
+    | FormerlyIncarcerated
+    | OnSexOffenderRegistry
+    | PetHelp
+    | OutsideOfDavidsonCounty
+    | Arts
+    | Advocacy
 
 
 categories =
-    [ Shelter
-    , Food
-    , Healthcare
-    , ShowersAndRestrooms
-    , Childcare
-    , DomesticViolence
-    , LegalAid
-    , FinancialAid
-    , JobsAndEducation
-    , LgbtqPlus
-    , RentersAssistance
-    , Internet
-    ]
+    urgentNeeds ++ care ++ connectivity ++ help ++ work ++ familyAndYouth ++ forGroups ++ other
+
+
+urgentNeeds =
+    [ Food, Housing, PersonalCare, RentAndUtilitiesAssistance ]
+
+
+care =
+    [ MedicalCare, MentalHealth, AddictionServices, NursingHomesAndHospice, DentalAndHearing, HivPrepHepC ]
+
+
+connectivity =
+    [ Transportation, Internet, Phones ]
+
+
+help =
+    [ LegalAid, DomesticViolence, SexualAssault, IDsAndSSI ]
+
+
+work =
+    [ JobsAndJobTraining, AdultEducation ]
+
+
+familyAndYouth =
+    [ TutorsAndMentoring, Childcare, ParentingHelp ]
+
+
+forGroups =
+    [ SeniorsAndDisabilities, LGBTQPlus, Veterans, ImmigrantsAndRefugees, FormerlyIncarcerated, OnSexOffenderRegistry ]
+
+
+other =
+    [ PetHelp, OutsideOfDavidsonCounty, Arts, Advocacy ]
 
 
 categoryToString : Category -> String
 categoryToString category =
     case category of
-        Shelter ->
-            "shelter"
-
         Food ->
             "food"
 
-        Healthcare ->
-            "healthcare"
+        Housing ->
+            "housing"
 
-        ShowersAndRestrooms ->
-            "showers-and-restrooms"
+        PersonalCare ->
+            "personal-care"
 
-        Childcare ->
-            "childcare"
+        RentAndUtilitiesAssistance ->
+            "rent-and-utilities-assistance"
 
-        DomesticViolence ->
-            "domestic-violence"
+        MedicalCare ->
+            "medical-care"
+
+        MentalHealth ->
+            "mental-health"
+
+        AddictionServices ->
+            "addiction-services"
+
+        NursingHomesAndHospice ->
+            "nursing-homes-and-hospice"
+
+        DentalAndHearing ->
+            "dental-and-hearing"
+
+        HivPrepHepC ->
+            "hiv-prep-hepc"
+
+        Transportation ->
+            "transportation"
+
+        Internet ->
+            "internet"
+
+        Phones ->
+            "phones"
 
         LegalAid ->
             "legal-aid"
 
-        FinancialAid ->
-            "financial-aid"
+        DomesticViolence ->
+            "domestic-violence"
 
-        JobsAndEducation ->
-            "jobs-and-education"
+        SexualAssault ->
+            "sexual-assault"
 
-        LgbtqPlus ->
+        IDsAndSSI ->
+            "ids-and-ssi"
+
+        JobsAndJobTraining ->
+            "jobs-and-job-training"
+
+        AdultEducation ->
+            "adult-education"
+
+        TutorsAndMentoring ->
+            "tutors-and-mentoring"
+
+        Childcare ->
+            "childcare"
+
+        ParentingHelp ->
+            "parenting-help"
+
+        SeniorsAndDisabilities ->
+            "seniors-and-disabilities"
+
+        LGBTQPlus ->
             "lgbtq-plus"
 
-        RentersAssistance ->
-            "renters-assistance"
+        Veterans ->
+            "veterans"
 
-        Internet ->
-            "internet"
+        ImmigrantsAndRefugees ->
+            "immigrants-and-refugees"
+
+        FormerlyIncarcerated ->
+            "formerly-incarcerated"
+
+        OnSexOffenderRegistry ->
+            "on-sex-offender-registry"
+
+        PetHelp ->
+            "pet-help"
+
+        OutsideOfDavidsonCounty ->
+            "outside-of-davidson-county"
+
+        Arts ->
+            "arts"
+
+        Advocacy ->
+            "advocacy"
 
 
 type alias Service =
@@ -103,41 +203,101 @@ type alias Service =
 categoryFromString : String -> Maybe Category
 categoryFromString str =
     case str of
-        "shelter" ->
-            Just Shelter
-
         "food" ->
             Just Food
 
-        "healthcare" ->
-            Just Healthcare
+        "housing" ->
+            Just Housing
 
-        "showers-and-restrooms" ->
-            Just ShowersAndRestrooms
+        "personal-care" ->
+            Just PersonalCare
 
-        "childcare" ->
-            Just Childcare
+        "rent-and-utilities-assistance" ->
+            Just RentAndUtilitiesAssistance
 
-        "domestic-violence" ->
-            Just DomesticViolence
+        "medical-care" ->
+            Just MedicalCare
+
+        "mental-health" ->
+            Just MentalHealth
+
+        "addiction-services" ->
+            Just AddictionServices
+
+        "nursing-homes-and-hospice" ->
+            Just NursingHomesAndHospice
+
+        "dental-and-hearing" ->
+            Just DentalAndHearing
+
+        "hiv-prep-hepc" ->
+            Just HivPrepHepC
+
+        "transportation" ->
+            Just Transportation
+
+        "internet" ->
+            Just Internet
+
+        "phones" ->
+            Just Phones
 
         "legal-aid" ->
             Just LegalAid
 
-        "financial-aid" ->
-            Just FinancialAid
+        "domestic-violence" ->
+            Just DomesticViolence
 
-        "jobs-and-education" ->
-            Just JobsAndEducation
+        "sexual-assault" ->
+            Just SexualAssault
+
+        "ids-and-ssi" ->
+            Just IDsAndSSI
+
+        "jobs-and-job-training" ->
+            Just JobsAndJobTraining
+
+        "adult-education" ->
+            Just AdultEducation
+
+        "tutors-and-mentoring" ->
+            Just TutorsAndMentoring
+
+        "childcare" ->
+            Just Childcare
+
+        "parenting-help" ->
+            Just ParentingHelp
+
+        "seniors-and-disabilities" ->
+            Just SeniorsAndDisabilities
 
         "lgbtq-plus" ->
-            Just LgbtqPlus
+            Just LGBTQPlus
 
-        "renters-assistance" ->
-            Just RentersAssistance
+        "veterans" ->
+            Just Veterans
 
-        "internet" ->
-            Just Internet
+        "immigrants-and-refugees" ->
+            Just ImmigrantsAndRefugees
+
+        "formerly-incarcerated" ->
+            Just FormerlyIncarcerated
+
+        "on-sex-offender-registry" ->
+            Just OnSexOffenderRegistry
+
+        "pet-help" ->
+            Just PetHelp
+
+        "outside-of-davidson-county" ->
+            Just OutsideOfDavidsonCounty
+
+        "arts" ->
+            Just Arts
+
+        "advocacy" ->
+            Just Advocacy
 
         _ ->
             Nothing
@@ -150,26 +310,26 @@ categoryDecoder =
                 Decode.succeed <|
                     case str of
                         "Advocacy" ->
-                            LegalAid
+                            Advocacy
 
                         "Arts" ->
-                            LgbtqPlus
+                            Arts
 
                         -- need to create a new category
                         "Clothing, Day Shelters, and Showers - Clothing" ->
-                            ShowersAndRestrooms
+                            PersonalCare
 
                         "Clothing, Day Shelters, and Showers- Clothing and Hygiene" ->
-                            ShowersAndRestrooms
+                            PersonalCare
 
                         "HiSET Classes" ->
-                            JobsAndEducation
+                            AdultEducation
 
                         "Financial Education" ->
-                            JobsAndEducation
+                            AdultEducation
 
                         "Tutoring And Career Programs" ->
-                            JobsAndEducation
+                            JobsAndJobTraining
 
                         "Food - Emergency Food Boxes" ->
                             Food
@@ -184,7 +344,7 @@ categoryDecoder =
                             Food
 
                         _ ->
-                            Shelter
+                            Housing
             )
 
 
