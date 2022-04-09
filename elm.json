@@ -19,7 +19,7 @@
             "elm/url": "1.0.0",
             "elm-community/list-extra": "8.5.1",
             "elm-community/string-extra": "4.0.1",
-            "frandibar/elm-font-awesome-5": "1.0.0",
+            "gregziegan/elm-font-awesome-5": "1.0.1",
             "mdgriffith/elm-ui": "1.1.8",
             "rluiten/elm-text-search": "5.1.0"
         },

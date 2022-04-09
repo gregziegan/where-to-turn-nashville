@@ -113,7 +113,7 @@ filterDetails filter =
             ( FontAwesome.medkit, "Medical care" )
 
         MentalHealth ->
-            ( FontAwesome.notesMedical, "Mental health" )
+            ( FontAwesome.brain, "Mental health" )
 
         AddictionServices ->
             ( FontAwesome.prescriptionBottle, "Addiction services" )
@@ -161,7 +161,7 @@ filterDetails filter =
             ( FontAwesome.hands, "Childcare" )
 
         ParentingHelp ->
-            ( FontAwesome.handHoldingBox, "Parenting help" )
+            ( FontAwesome.handHoldingHeart, "Parenting help" )
 
         SeniorsAndDisabilities ->
             ( FontAwesome.wheelchair, "Seniors and people with disabilities" )
@@ -182,7 +182,7 @@ filterDetails filter =
             ( FontAwesome.list, "On sex offender registry" )
 
         PetHelp ->
-            ( FontAwesome.deployDog, "Pet help" )
+            ( FontAwesome.dog, "Pet help" )
 
         OutsideOfDavidsonCounty ->
             ( FontAwesome.mapSigns, "Outside of Davidson Co." )

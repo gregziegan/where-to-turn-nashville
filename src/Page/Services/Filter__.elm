@@ -6,7 +6,6 @@ import Dict exposing (Dict)
 import Element exposing (DeviceClass(..), Element, centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
 import ElmTextSearch exposing (Index)
-import FontAwesome exposing (share)
 import Head
 import Head.Seo as Seo
 import OptimizedDecoder as Decode

@@ -9,7 +9,7 @@ import Dict
 import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, newTabLink, padding, paragraph, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Font as Font
 import Element.Input as Input
-import FontAwesome exposing (fontAwesome)
+import FontAwesome
 import Head
 import Head.Seo as Seo
 import Json.Encode
