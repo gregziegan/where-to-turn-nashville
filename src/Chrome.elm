@@ -35,28 +35,17 @@ starredLink =
 
 
 menuLink label path =
-    link [ width fill ]
+    link [ width fill, Font.bold ]
         { url = path
         , label = text label
         }
 
 
-menuLinks =
-    [ menuLink "Home" "/"
-    , menuLink "Order the guide" "/"
-    , menuLink "Add or edit a listing" "/"
-    , menuLink "About" "/"
-    , menuLink "Other resources" "/"
-    , menuLink "My Saved" "/saved"
-    ]
-
-
-viewMenuLink aLink =
-    row
-        [ padding 10
-        , width fill
-        ]
-        [ aLink ]
+resourceLink label path =
+    link [ width fill ]
+        { url = path
+        , label = text label
+        }
 
 
 viewMenuDrawer window toggleMenu =
@@ -75,18 +64,58 @@ viewMenuDrawer window toggleMenu =
                 , spacing 5
                 , height fill
                 ]
-                (row [ width fill, padding 5 ]
-                    [ text "Menu"
-                    , Input.button [ alignRight ]
+                [ row [ width fill, padding 5 ]
+                    [ Input.button [ alignRight ]
                         { onPress = Just toggleMenu
                         , label = el [] <| Element.html <| FontAwesome.icon FontAwesome.bars
                         }
                     ]
-                    :: List.map viewMenuLink menuLinks
-                )
+                , row [ width fill ] [ viewMenu ]
+                ]
             )
         ]
         []
+
+
+viewMenuLink aLink =
+    row [ width fill, padding 10 ] [ aLink ]
+
+
+resourceLinks =
+    [ resourceLink "Special populations" "/"
+    , resourceLink "Housing" "/"
+    , resourceLink "Food" "/"
+    , resourceLink "Personal care" "/"
+    , resourceLink "Rent and utilities assistance" "/"
+    , resourceLink "Healthcare" "/"
+    , resourceLink "Jobs and education" "/"
+    , resourceLink "Legal aid, IDs and SSI" "/"
+    , resourceLink "Domestic violence and sexual assault" "/"
+    , resourceLink "Transportation" "/"
+    , resourceLink "Phones and internet" "/"
+    , resourceLink "Family and youth resources" "/"
+    , resourceLink "Pets" "/"
+    , resourceLink "Arts" "/"
+    , resourceLink "Advocacy" "/"
+    , resourceLink "Outside Davidson County" "/"
+    ]
+
+
+viewMenu =
+    column [ width fill ]
+        [ viewMenuLink <| menuLink "Home" "/"
+        , row [ width fill, padding 10 ]
+            [ column [ width fill ]
+                [ paragraph [ Font.bold ] [ text "Resources" ]
+                , column [ width fill, padding 10 ] (List.map viewMenuLink resourceLinks)
+                ]
+            ]
+        , viewMenuLink <| menuLink "Order the guide" "/"
+        , viewMenuLink <| menuLink "Add or edit a listing" "/"
+        , viewMenuLink <| menuLink "About" "/"
+        , viewMenuLink <| menuLink "Other resources" "/"
+        , viewMenuLink <| menuLink "My Saved" "/saved"
+        ]
 
 
 viewPersistentMenu config =
@@ -97,7 +126,7 @@ viewPersistentMenu config =
 
         -- , Border.widthEach { top = 0, bottom = 0, right = 1, left = 0 }
         ]
-        (List.map viewMenuLink menuLinks)
+        [ viewMenu ]
 
 
 type alias Config msg =
