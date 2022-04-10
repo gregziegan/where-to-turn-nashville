@@ -417,7 +417,7 @@ listItem distance service =
             [ spacing 10
             , padding 10
             , height (px 100)
-            , width (fill |> minimum 355 |> maximum 1000)
+            , width (fill |> minimum 330 |> maximum 1000)
             , Border.width 1
             ]
             [ photo service

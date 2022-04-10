@@ -145,6 +145,7 @@ viewMobile config =
                 else
                     Element.none
                )
+            :: viewBackLink config
             :: config.content
         )
 
