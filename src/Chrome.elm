@@ -2,7 +2,7 @@ module Chrome exposing (Config, view)
 
 import Breadcrumbs
 import Browser.Navigation
-import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, alignTop, centerX, clipY, column, el, fill, fillPortion, height, link, maximum, padding, paddingXY, paragraph, px, row, scrollbarY, spacing, text, width)
+import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, alignTop, centerX, clipY, column, el, fill, fillPortion, height, link, maximum, minimum, padding, paddingXY, paragraph, px, row, scrollbarY, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -42,9 +42,11 @@ menuLink label path =
 
 
 resourceLink label path =
-    link [ width fill ]
+    link
+        [ width fill
+        ]
         { url = path
-        , label = text label
+        , label = paragraph [ width (fill |> maximum 280) ] [ text label ]
         }
 
 
@@ -56,13 +58,14 @@ viewMenuDrawer window toggleMenu =
         , Element.htmlAttribute (Attrs.style "z-index" "1")
         , Element.inFront
             (column
-                [ width (fill |> maximum 250)
+                [ width (fill |> minimum 250 |> maximum (window.width * 5 // 6))
                 , Background.color Palette.white
                 , paddingXY 10 20
                 , Element.htmlAttribute (Attrs.style "z-index" "2")
                 , Border.width 2
                 , spacing 5
                 , height fill
+                , scrollbarY
                 ]
                 [ row [ width fill, padding 5 ]
                     [ Input.button [ alignRight ]
@@ -107,7 +110,11 @@ viewMenu =
         , row [ width fill, padding 10 ]
             [ column [ width fill ]
                 [ paragraph [ Font.bold ] [ text "Resources" ]
-                , column [ width fill, padding 10 ] (List.map viewMenuLink resourceLinks)
+                , column
+                    [ width fill
+                    , padding 10
+                    ]
+                    (List.map viewMenuLink resourceLinks)
                 ]
             ]
         , viewMenuLink <| menuLink "Order the guide" "/"
