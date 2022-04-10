@@ -6,10 +6,10 @@ import DataSource exposing (DataSource)
 import DataSource.Http
 import DataSource.Port
 import Dict
-import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, newTabLink, padding, paragraph, row, spacing, text, textColumn, width, wrappedRow)
+import Element exposing (Element, alignLeft, alignRight, alignTop, centerX, column, el, fill, link, maximum, newTabLink, padding, paddingXY, paragraph, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Font as Font
 import Element.Input as Input
-import FontAwesome
+import FontAwesome exposing (Transform)
 import Head
 import Head.Seo as Seo
 import Json.Encode
@@ -141,9 +141,31 @@ type alias Data =
 
 
 viewDescription service =
+    let
+        services =
+            String.split ";" service.description
+                |> List.map String.trim
+    in
     textColumn [ width fill ]
-        [ paragraph [ width fill ] [ text service.description ]
+        [ if List.length services < 2 then
+            paragraph [ width fill ] [ text service.description ]
+
+          else
+            viewUnorderedList services
         ]
+
+
+viewUnorderedList l =
+    column [ width fill ]
+        (List.map
+            (\item ->
+                row [ width fill, spacing 5 ]
+                    [ column [ alignTop ] [ text "•" ]
+                    , column [ width fill ] [ paragraph [] [ text item ] ]
+                    ]
+            )
+            l
+        )
 
 
 directionsLink =
@@ -194,13 +216,21 @@ callLink phone =
                 }
                 |> Button.fullWidth
                 |> Button.withIcon FontAwesome.phone
+                |> Button.withIconOptions [ FontAwesome.Transform [ FontAwesome.FlipHorizontal ] ]
                 |> Button.render
         }
 
 
+viewHeader children =
+    row [ width fill ]
+        [ textColumn [ width fill, spacing 5 ]
+            children
+        ]
+
+
 viewSection children =
     row [ width fill ]
-        [ textColumn [ width fill, spacing 10, padding 10 ]
+        [ textColumn [ width fill, spacing 10, paddingXY 10 0 ]
             children
         ]
 
@@ -218,44 +248,95 @@ websiteLink website =
 
 viewService : Organization -> Service -> Element Msg
 viewService organization service =
-    column [ width fill, spacing 10 ]
-        [ viewSection
-            [ link [] { url = "/organizations/detail/" ++ String.fromInt organization.id, label = paragraph [ Font.bold ] [ text organization.name ] }
-            , el [ alignLeft ] <| Element.html <| FontAwesome.iconWithOptions FontAwesome.infoCircle FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
-            , paragraph [ Font.italic ] [ text "Organization" ]
+    column [ width fill, padding 10, spacing 10 ]
+        ([ viewHeader
+            [ paragraph [ Font.bold ] [ text organization.name ]
+            , link [] { url = "/organizations/detail/" ++ String.fromInt organization.id, label = paragraph [ Font.italic ] [ text "Organization" ] }
             ]
-        , viewSection
+         , viewSection
             [ paragraph [] [ text <| Maybe.withDefault "" <| service.address ] ]
-        , viewSection
+         , viewSection
             [ viewDescription service
             ]
-        , viewSection
-            [ paragraph [ Font.bold ] [ text "Requirements" ]
-            , paragraph [] [ text <| Maybe.withDefault "" <| service.requirements ]
-            ]
-        , viewSection
-            [ paragraph [ Font.bold ] [ text "Hours" ]
-            , paragraph [] [ text <| Maybe.withDefault "" <| Maybe.map Schedule.toString service.hours ]
-            ]
-        , viewSection
-            [ paragraph [ Font.bold ] [ text "How to apply" ]
-            , paragraph [] [ text <| Maybe.withDefault "" <| service.applicationProcess ]
-            ]
-        , row [ width fill ]
-            [ column [ width fill, spacing 10 ]
-                [ directionsLink
-                , case organization.phone of
-                    Just phone ->
-                        callLink phone
+         ]
+            ++ (case service.requirements of
+                    Just "" ->
+                        []
+
+                    Just requirements ->
+                        [ viewHeader
+                            [ paragraph [ Font.bold ] [ text "Requirements" ]
+                            ]
+                        , viewSection
+                            [ paragraph [] [ text requirements ] ]
+                        ]
 
                     Nothing ->
-                        Element.none
-                , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
-                , smsButton
-                , saveLink
-                ]
-            ]
-        ]
+                        []
+               )
+            ++ (case service.hours of
+                    Just hours ->
+                        [ viewHeader
+                            [ paragraph [ Font.bold ] [ text "Hours" ]
+                            ]
+                        , viewSection
+                            [ paragraph [] [ text <| Schedule.toString hours ]
+                            ]
+                        ]
+
+                    Nothing ->
+                        []
+               )
+            ++ (case service.applicationProcess of
+                    Just "" ->
+                        []
+
+                    Just applicationProcess ->
+                        [ viewHeader
+                            [ paragraph [ Font.bold ] [ text "How to apply" ]
+                            ]
+                        , viewSection
+                            [ paragraph [] [ text applicationProcess ]
+                            ]
+                        ]
+
+                    Nothing ->
+                        []
+               )
+            ++ (case organization.phone of
+                    Just "" ->
+                        []
+
+                    Just phone ->
+                        [ viewHeader
+                            [ paragraph [ Font.bold ] [ text "Contact" ]
+                            ]
+                        , viewSection
+                            [ paragraph
+                                []
+                                [ text ("Phone: " ++ phone) ]
+                            ]
+                        ]
+
+                    Nothing ->
+                        []
+               )
+            ++ [ row [ width fill ]
+                    [ column [ width fill, spacing 10 ]
+                        [ directionsLink
+                        , case organization.phone of
+                            Just phone ->
+                                callLink phone
+
+                            Nothing ->
+                                Element.none
+                        , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
+                        , smsButton
+                        , saveLink
+                        ]
+                    ]
+               ]
+        )
 
 
 view :

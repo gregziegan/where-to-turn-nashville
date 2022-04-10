@@ -1,16 +1,17 @@
-module Button exposing (Config, fullWidth, primary, render, transparent, withIcon)
+module Button exposing (Config, fullWidth, primary, render, transparent, withIcon, withIconOptions)
 
-import Element exposing (el, fill, padding, px, row, spacing, text, width)
+import Element exposing (Attribute, el, fill, padding, px, row, spacing, text, width)
 import Element.Background as Background
 import Element.Font as Font
 import Element.Input as Input
-import FontAwesome exposing (Icon)
+import FontAwesome exposing (Icon, Option)
 import Palette
 
 
 type alias Config msg =
-    { attributes : Element.Attribute msg
+    { attributes : List (Element.Attribute msg)
     , icon : Maybe Icon
+    , iconOptions : List Option
     , text : String
     , onPress : Maybe msg
     }
@@ -20,13 +21,16 @@ fullWidth config =
     { config | attributes = config.attributes ++ [ width fill ] }
 
 
+attributes : List (Element.Attribute msg)
 attributes =
     [ width (px 200) ]
 
 
+defaultConfig : Config msg
 defaultConfig =
     { attributes = attributes
     , icon = Nothing
+    , iconOptions = []
     , text = ""
     , onPress = Nothing
     }
@@ -34,6 +38,10 @@ defaultConfig =
 
 withIcon icon config =
     { config | icon = Just icon }
+
+
+withIconOptions options config =
+    { config | iconOptions = options }
 
 
 primary { onPress, text } =
@@ -71,7 +79,7 @@ render config =
                         [ width fill
                         , spacing 10
                         ]
-                        [ el [] <| Element.html <| FontAwesome.icon icon
+                        [ el [] <| Element.html <| FontAwesome.iconWithOptions icon FontAwesome.Solid config.iconOptions []
                         , text config.text
                         ]
 
