@@ -4,13 +4,11 @@ import Browser.Events exposing (onResize)
 import Browser.Navigation
 import Chrome
 import DataSource exposing (DataSource)
-import DataSource.Http
 import Dict exposing (Dict)
 import Element exposing (DeviceClass(..), el, fill, padding, width)
 import Element.Font as Font
-import ElmTextSearch
-import FontAwesome
 import Html exposing (Html)
+import Html.Attributes as Attrs
 import OptimizedDecoder as Decode exposing (Decoder, int)
 import OptimizedDecoder.Pipeline exposing (required)
 import Organization exposing (Organization)
@@ -20,10 +18,8 @@ import Pages.Secrets as Secrets
 import Path exposing (Path)
 import QueryParams
 import Route exposing (Route(..))
-import Search
 import Service exposing (Service)
 import SharedTemplate exposing (SharedTemplate)
-import Spreadsheet
 import View exposing (View)
 import Window exposing (Window)
 
@@ -185,8 +181,7 @@ view sharedData page model toMsg pageView =
             Element.classifyDevice model.window
     in
     { body =
-        [ Element.html FontAwesome.useCss
-        , Chrome.view
+        [ Chrome.view
             { device = device
             , showMobileMenu = model.showMobileMenu
             , toggleMobileMenu = toMsg ToggleMobileMenu
