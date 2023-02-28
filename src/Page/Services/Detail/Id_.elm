@@ -14,7 +14,6 @@ import Head
 import Head.Seo as Seo
 import Json.Encode
 import List.Extra
-import Mask
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
 import Page exposing (Page, PageWithState, StaticPayload)
@@ -212,7 +211,7 @@ callLink phone =
         , label =
             Button.transparent
                 { onPress = Nothing
-                , text = "Call " ++ Mask.string { mask = "(###) ###-####", replace = '#' } phone
+                , text = "Call "
                 }
                 |> Button.fullWidth
                 |> Button.withIcon FontAwesome.phone
