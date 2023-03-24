@@ -51,7 +51,7 @@ routes : DataSource (List RouteParams)
 routes =
     DataSource.Http.get
         (Secrets.succeed
-            (Spreadsheet.url Organization.sheetId "A2:B")
+            (Spreadsheet.url Organization.sheetId "A2:M")
             |> Secrets.with "GOOGLE_API_KEY"
         )
         (Decode.field "values"

@@ -5,7 +5,7 @@ import Element.Border as Border
 import Element.Font as Font
 import FontAwesome
 import OptimizedDecoder as Decode exposing (Decoder, int, nullable, string)
-import OptimizedDecoder.Pipeline exposing (custom, decode, required)
+import OptimizedDecoder.Pipeline exposing (custom, decode, hardcoded, required)
 import Organization exposing (Organization)
 import Schedule exposing (Schedule)
 
@@ -353,20 +353,20 @@ decoder =
     decode Service
         |> custom (Decode.index 0 Decode.int)
         |> custom (Decode.index 1 categoryDecoder)
-        |> custom (Decode.index 2 (nullable string))
-        |> custom (Decode.index 3 (nullable Schedule.decoder))
+        |> hardcoded Nothing
+        |> hardcoded Nothing
         |> custom
-            (Decode.index 5
+            (Decode.index 2
                 (Decode.string
                     |> Decode.andThen (\str -> Decode.succeed <| String.join " " <| List.take 4 <| String.words str)
                 )
             )
-        |> custom (Decode.index 5 Decode.string)
+        |> custom (Decode.index 2 Decode.string)
+        |> custom (Decode.oneOf [ Decode.index 4 (Decode.nullable Decode.string), Decode.succeed Nothing ])
+        |> custom (Decode.oneOf [ Decode.index 5 (Decode.nullable Decode.string), Decode.succeed Nothing ])
         |> custom (Decode.oneOf [ Decode.index 6 (Decode.nullable Decode.string), Decode.succeed Nothing ])
-        |> custom (Decode.oneOf [ Decode.index 7 (Decode.nullable Decode.string), Decode.succeed Nothing ])
-        |> custom (Decode.oneOf [ Decode.index 8 (Decode.nullable Decode.string), Decode.succeed Nothing ])
-        |> custom (Decode.oneOf [ Decode.index 9 (Decode.nullable Decode.string), Decode.succeed Nothing ])
-        |> custom (Decode.index 2 string)
+        |> hardcoded Nothing
+        |> custom (Decode.index 3 string)
 
 
 photo service =

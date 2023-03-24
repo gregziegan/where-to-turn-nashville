@@ -51,5 +51,5 @@ decoder =
         |> custom (Decode.index 2 (nullable string))
         |> custom (Decode.index 3 (nullable Schedule.decoder))
         |> custom (Decode.index 4 (nullable string))
-        |> custom (Decode.index 9 (nullable string |> Decode.map normalizeSite))
-        |> custom (Decode.index 10 (nullable string |> Decode.map normalizePhone))
+        |> custom (Decode.index 8 (nullable string |> Decode.map normalizeSite))
+        |> custom (Decode.index 9 (nullable string |> Decode.map normalizePhone))
