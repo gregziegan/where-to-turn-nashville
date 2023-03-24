@@ -21,6 +21,7 @@ in rec {
   frontendTools =
   [
     pkgs.elmPackages.elm
+    pkgs.elmPackages.elm-json
     pkgs.elmPackages.elm-test-rs
     pkgs.elmPackages.elm-format
     pkgs.elmPackages.elm-optimize-level-2
