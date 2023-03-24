@@ -1,9 +1,6 @@
 module Search exposing (Config, allServicesAdded, box, button)
 
-import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, centerX, column, el, fill, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, width)
-import Element.Background as Background
-import Element.Border as Border
-import Element.Font as Font
+import Element exposing (DeviceClass(..), Element, fill, px, row, spacing, text, width)
 import Element.Input as Input
 import ElmTextSearch
 import FontAwesome

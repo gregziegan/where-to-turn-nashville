@@ -4,12 +4,12 @@ import Element exposing (Element, column, el, fill, height, link, maximum, minim
 import Element.Border as Border
 import Element.Font as Font
 import FontAwesome
-import OptimizedDecoder as Decode exposing (Decoder, int, nullable, string)
-import OptimizedDecoder.Pipeline exposing (custom, decode, hardcoded, required)
-import Organization exposing (Organization)
+import OptimizedDecoder as Decode exposing (Decoder, string)
+import OptimizedDecoder.Pipeline exposing (custom, decode, hardcoded)
 import Schedule exposing (Schedule)
 
 
+sheetId : String
 sheetId =
     "Services"
 
@@ -49,38 +49,47 @@ type Category
     | Advocacy
 
 
+categories : List Category
 categories =
     urgentNeeds ++ care ++ connectivity ++ help ++ work ++ familyAndYouth ++ forGroups ++ other
 
 
+urgentNeeds : List Category
 urgentNeeds =
     [ Food, Housing, PersonalCare, RentAndUtilitiesAssistance ]
 
 
+care : List Category
 care =
     [ MedicalCare, MentalHealth, AddictionServices, NursingHomesAndHospice, DentalAndHearing, HivPrepHepC ]
 
 
+connectivity : List Category
 connectivity =
     [ Transportation, Internet, Phones ]
 
 
+help : List Category
 help =
     [ LegalAid, DomesticViolence, SexualAssault, IDsAndSSI ]
 
 
+work : List Category
 work =
     [ JobsAndJobTraining, AdultEducation ]
 
 
+familyAndYouth : List Category
 familyAndYouth =
     [ TutorsAndMentoring, Childcare, ParentingHelp ]
 
 
+forGroups : List Category
 forGroups =
     [ SeniorsAndDisabilities, LGBTQPlus, Veterans, ImmigrantsAndRefugees, FormerlyIncarcerated, OnSexOffenderRegistry ]
 
 
+other : List Category
 other =
     [ PetHelp, OutsideOfDavidsonCounty, Arts, Advocacy ]
 
@@ -303,6 +312,7 @@ categoryFromString str =
             Nothing
 
 
+categoryDecoder : Decoder Category
 categoryDecoder =
     Decode.string
         |> Decode.andThen
@@ -369,17 +379,20 @@ decoder =
         |> custom (Decode.index 3 string)
 
 
-photo service =
+photo : Service -> Element msg
+photo _ =
     el
         [ padding 10
         ]
         (Element.html <| FontAwesome.icon FontAwesome.infoCircle)
 
 
+briefDescription : Service -> String
 briefDescription service =
     String.join " " <| List.take 10 <| String.words service.description
 
 
+briefDescriptionColumn : Service -> Element msg
 briefDescriptionColumn service =
     textColumn [ width (fill |> maximum 250) ]
         [ paragraph [ Font.size 14 ]
@@ -390,6 +403,7 @@ briefDescriptionColumn service =
         ]
 
 
+distancePin : Float -> Element msg
 distancePin distance =
     link []
         { url = ""
@@ -403,6 +417,7 @@ distancePin distance =
         }
 
 
+itemLink : Service -> Element msg -> Element msg
 itemLink service children =
     link [ width fill ]
         { url = "/services/detail/" ++ String.fromInt service.id

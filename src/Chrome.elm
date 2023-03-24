@@ -2,7 +2,7 @@ module Chrome exposing (Config, view)
 
 import Breadcrumbs
 import Browser.Navigation
-import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, alignTop, centerX, clipY, column, el, fill, fillPortion, height, link, maximum, minimum, padding, paddingXY, paragraph, px, row, scrollbarY, spacing, text, width)
+import Element exposing (Device, DeviceClass(..), Element, alignRight, alignTop, centerX, clipY, column, el, fill, fillPortion, height, link, maximum, minimum, padding, paddingXY, paragraph, px, row, scrollbarY, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -16,10 +16,12 @@ import Search
 import Window exposing (Window)
 
 
+menuButton : msg -> Element msg
 menuButton toggleMenu =
     Input.button [] { onPress = Just toggleMenu, label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.bars }
 
 
+logo : Element msg
 logo =
     Element.link []
         { url = "/"
@@ -27,6 +29,7 @@ logo =
         }
 
 
+starredLink : Element msg
 starredLink =
     Element.link []
         { url = "/starred"
@@ -34,6 +37,7 @@ starredLink =
         }
 
 
+menuLink : String -> String -> Element msg
 menuLink label path =
     link [ width fill, Font.bold ]
         { url = path
@@ -41,6 +45,7 @@ menuLink label path =
         }
 
 
+resourceLink : String -> String -> Element msg
 resourceLink label path =
     link
         [ width fill
@@ -50,6 +55,7 @@ resourceLink label path =
         }
 
 
+viewMenuDrawer : Window -> msg -> Element msg
 viewMenuDrawer window toggleMenu =
     column
         [ width fill
@@ -80,10 +86,12 @@ viewMenuDrawer window toggleMenu =
         []
 
 
+viewMenuLink : Element msg -> Element msg
 viewMenuLink aLink =
     row [ width fill, padding 10 ] [ aLink ]
 
 
+resourceLinks : List (Element msg)
 resourceLinks =
     [ resourceLink "Special populations" "/"
     , resourceLink "Housing" "/"
@@ -104,6 +112,7 @@ resourceLinks =
     ]
 
 
+viewMenu : Element msg
 viewMenu =
     column [ width fill ]
         [ viewMenuLink <| menuLink "Home" "/"
@@ -125,7 +134,8 @@ viewMenu =
         ]
 
 
-viewPersistentMenu config =
+viewPersistentMenu : Config msg -> Element msg
+viewPersistentMenu _ =
     column
         [ width (fillPortion 1)
         , alignTop
@@ -153,6 +163,7 @@ type alias Config msg =
     }
 
 
+viewBackLink : Config msg -> Element msg
 viewBackLink { goBack, navKey, page } =
     case page.route of
         Just Index ->
@@ -166,6 +177,7 @@ viewBackLink { goBack, navKey, page } =
             Element.none
 
 
+viewMobile : Config msg -> Element msg
 viewMobile config =
     column
         [ width (fill |> maximum config.window.width)
@@ -186,10 +198,12 @@ viewMobile config =
         )
 
 
+navBarHeight : number
 navBarHeight =
     80
 
 
+viewNavBar : Bool -> Config msg -> Element msg
 viewNavBar isMobile { window, showMobileMenu, toggleMobileMenu, searchConfig } =
     row
         ([ width fill
@@ -241,10 +255,12 @@ viewNavBar isMobile { window, showMobileMenu, toggleMobileMenu, searchConfig } =
         ]
 
 
+paneHeight : Config msg -> Int
 paneHeight config =
     config.window.height - navBarHeight
 
 
+viewPanes : Config msg -> Element msg
 viewPanes config =
     row
         [ width fill
@@ -263,6 +279,7 @@ viewPanes config =
         ]
 
 
+viewDesktop : Config msg -> Element msg
 viewDesktop config =
     column
         [ width fill

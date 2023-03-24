@@ -1,8 +1,7 @@
 module Page.Index exposing (Data, Model, Msg, page)
 
 import DataSource exposing (DataSource)
-import Element exposing (alignLeft, alignRight, alignTop, centerX, column, el, fill, fillPortion, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
-import Element.Background as Background
+import Element exposing (Element, alignRight, alignTop, centerX, column, fill, fillPortion, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
@@ -47,7 +46,7 @@ data =
 head :
     StaticPayload Data RouteParams
     -> List Head.Tag
-head static =
+head _ =
     Seo.summary
         { canonicalUrlOverride = Nothing
         , siteName = "where-to-turn-nashville"
@@ -68,6 +67,7 @@ type alias Data =
     ()
 
 
+viewFilterLink : { a | hasBorders : Bool, isVertical : Bool, fontSize : Int } -> Category -> Element msg
 viewFilterLink { hasBorders, isVertical, fontSize } filter =
     let
         ( icon, options, title ) =
@@ -98,7 +98,7 @@ viewFilterLink { hasBorders, isVertical, fontSize } filter =
                         column [ width fill, paddingXY 5 0, spacing 10 ]
                             [ Element.el [ Font.center, centerX ] <|
                                 Element.html <|
-                                    FontAwesome.iconWithOptions icon FontAwesome.Solid ([ FontAwesome.Size (FontAwesome.Mult 2) ] ++ options) []
+                                    FontAwesome.iconWithOptions icon FontAwesome.Solid (FontAwesome.Size (FontAwesome.Mult 2) :: options) []
                             , paragraph [ Font.center, Font.size fontSize ] [ text title ]
                             ]
 
@@ -106,7 +106,7 @@ viewFilterLink { hasBorders, isVertical, fontSize } filter =
                         row [ paddingXY 5 0, width fill ]
                             [ Element.el [ alignRight ] <|
                                 Element.html <|
-                                    FontAwesome.iconWithOptions icon FontAwesome.Solid ([ FontAwesome.Size (FontAwesome.Mult 2) ] ++ options) []
+                                    FontAwesome.iconWithOptions icon FontAwesome.Solid (FontAwesome.Size (FontAwesome.Mult 2) :: options) []
                             , paragraph
                                 [ Font.size fontSize
                                 , Font.center
@@ -118,6 +118,7 @@ viewFilterLink { hasBorders, isVertical, fontSize } filter =
         }
 
 
+filterDetails : Category -> ( FontAwesome.Icon, List Option, String )
 filterDetails filter =
     case filter of
         Food ->
@@ -217,6 +218,7 @@ filterDetails filter =
             ( FontAwesome.handshake, [], "Advocacy" )
 
 
+viewWelcomeBanner : Element msg
 viewWelcomeBanner =
     row [ width fill ]
         [ textColumn [ width fill ]
@@ -229,6 +231,7 @@ viewWelcomeBanner =
         ]
 
 
+viewHelpBanner : Element a
 viewHelpBanner =
     row
         [ width fill
@@ -275,10 +278,12 @@ viewHelpBanner =
         ]
 
 
+viewMoreLink : Element msg
 viewMoreLink =
     link [ alignRight, Font.underline, Font.size 14 ] { url = "/", label = text "More" }
 
 
+viewGroup : CellConfig -> String -> List Category -> Element msg
 viewGroup cellConfig title categories =
     column
         [ width fill
@@ -296,6 +301,7 @@ viewGroup cellConfig title categories =
         ]
 
 
+viewGroupAlt : CellConfig -> String -> List Category -> Element msg
 viewGroupAlt cellConfig title categories =
     column
         [ width fill
@@ -307,6 +313,14 @@ viewGroupAlt cellConfig title categories =
         ]
 
 
+type alias CellConfig =
+    { hasBorders : Bool
+    , isVertical : Bool
+    , fontSize : Int
+    }
+
+
+defaultCellConfig : CellConfig
 defaultCellConfig =
     { hasBorders = True
     , isVertical = True
@@ -319,7 +333,7 @@ view :
     -> Shared.Model
     -> StaticPayload Data RouteParams
     -> View Msg
-view maybeUrl sharedModel static =
+view _ _ _ =
     { title = "Where to turn in Nashville"
     , body =
         [ column

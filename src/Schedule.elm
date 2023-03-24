@@ -1,6 +1,6 @@
 module Schedule exposing (Schedule, decoder, toString)
 
-import OptimizedDecoder as Decode exposing (Decoder, list, string)
+import OptimizedDecoder as Decode exposing (Decoder)
 import Time exposing (Posix)
 
 
@@ -14,7 +14,7 @@ type alias Schedule =
 toString : Schedule -> String
 toString schedule =
     case List.head schedule.intervals of
-        Just ( start, end ) ->
+        Just ( _, _ ) ->
             "M 9-5"
 
         Nothing ->

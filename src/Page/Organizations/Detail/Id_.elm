@@ -1,13 +1,10 @@
 module Page.Organizations.Detail.Id_ exposing (Data, Model, Msg, page)
 
-import Breadcrumbs
 import DataSource exposing (DataSource)
 import DataSource.Http
 import DataSource.Port
-import Dict
-import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width, wrappedRow)
+import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
-import Element.Input as Input
 import FontAwesome
 import Head
 import Head.Seo as Seo
@@ -15,11 +12,10 @@ import Json.Encode
 import List.Extra
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
-import Page exposing (Page, PageWithState, StaticPayload)
+import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Secrets as Secrets
 import Pages.Url
-import Service
 import Shared
 import Spreadsheet
 import View exposing (View)
@@ -90,13 +86,13 @@ data routeParams =
 head :
     StaticPayload Data RouteParams
     -> List Head.Tag
-head static =
+head _ =
     Seo.summary
         { canonicalUrlOverride = Nothing
-        , siteName = "elm-pages"
+        , siteName = "Where to turn in Nashville"
         , image =
             { url = Pages.Url.external "TODO"
-            , alt = "elm-pages logo"
+            , alt = "Where to turn in Nashville"
             , dimensions = Nothing
             , mimeType = Nothing
             }
@@ -111,6 +107,7 @@ type alias Data =
     Maybe Organization
 
 
+viewSection : List (Element msg) -> Element msg
 viewSection children =
     row [ width fill ]
         [ textColumn [ width fill, spacing 10, padding 10 ]
@@ -146,7 +143,7 @@ view :
     -> Shared.Model
     -> StaticPayload Data RouteParams
     -> View Msg
-view maybeUrl sharedModel static =
+view _ _ static =
     { title = "Where to turn in Nashville | Organization"
     , body =
         [ column

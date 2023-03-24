@@ -3,14 +3,13 @@ module Page.Services.Filter__ exposing (Data, Model, Msg, page)
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Dict exposing (Dict)
-import Element exposing (DeviceClass(..), Element, centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
+import Element exposing (DeviceClass(..), Element, column, fill, maximum, padding, paragraph, spacing, text, width)
 import Element.Font as Font
 import ElmTextSearch exposing (Index)
 import Head
 import Head.Seo as Seo
 import OptimizedDecoder as Decode
-import Organization exposing (Organization)
-import Page exposing (Page, PageWithState, StaticPayload)
+import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Secrets as Secrets
 import Pages.Url
@@ -84,13 +83,13 @@ data routeParams =
 head :
     StaticPayload Data RouteParams
     -> List Head.Tag
-head static =
+head _ =
     Seo.summary
         { canonicalUrlOverride = Nothing
-        , siteName = "elm-pages"
+        , siteName = "Where to turn in Nashville"
         , image =
             { url = Pages.Url.external "TODO"
-            , alt = "elm-pages logo"
+            , alt = "Where to turn in Nashville"
             , dimensions = Nothing
             , mimeType = Nothing
             }
@@ -107,6 +106,7 @@ type alias Data =
     }
 
 
+toDict : List { a | id : comparable } -> Dict comparable { a | id : comparable }
 toDict entities =
     entities
         |> List.map (\e -> ( e.id, e ))
@@ -153,6 +153,7 @@ viewList toItem static =
         )
 
 
+viewMobile : String -> Shared.Model -> StaticPayload Data RouteParams -> List (Element Msg)
 viewMobile filterText sharedModel static =
     [ column
         [ width (fill |> maximum 1200)
@@ -174,6 +175,7 @@ viewMobile filterText sharedModel static =
     ]
 
 
+viewDesktop : String -> Shared.Model -> StaticPayload Data RouteParams -> List (Element Msg)
 viewDesktop filterText sharedModel static =
     [ column
         [ width fill
@@ -201,7 +203,7 @@ view :
     -> Shared.Model
     -> StaticPayload Data RouteParams
     -> View Msg
-view maybeUrl sharedModel static =
+view _ sharedModel static =
     let
         filterText =
             Maybe.withDefault "All services" <|
