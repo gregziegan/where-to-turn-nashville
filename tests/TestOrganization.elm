@@ -1,10 +1,10 @@
-module TestOrganization exposing (decode)
+module TestOrganization exposing (suite)
 
 import Expect
 import OptimizedDecoder exposing (decodeString)
 import Organization exposing (Organization)
 import Schedule exposing (Schedule)
-import Test exposing (Test, test)
+import Test exposing (Test, describe, test)
 
 
 organizationJson : String
@@ -41,9 +41,11 @@ organization =
     }
 
 
-decode : Test
-decode =
-    Test.concat
-        [ test "decodes" <|
-            \() -> Expect.equal (Ok organization) (decodeString Organization.decoder organizationJson)
+suite : Test
+suite =
+    describe "The Organization modle"
+        [ describe "decoder"
+            [ test "decodes a full JSON array" <|
+                \() -> Expect.equal (Ok organization) (decodeString Organization.decoder organizationJson)
+            ]
         ]

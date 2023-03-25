@@ -1,17 +1,9 @@
-module TestService exposing (decode, unit)
+module TestService exposing (suite)
 
 import Expect
 import OptimizedDecoder exposing (decodeString)
 import Service exposing (Service)
-import Test exposing (Test, test)
-
-
-unit : Test
-unit =
-    Test.concat
-        [ test "converts to valid URL path" <|
-            \() -> Expect.equal (Service.categoryToString Service.Arts) "arts"
-        ]
+import Test exposing (Test, describe, test)
 
 
 serviceJson : String
@@ -46,9 +38,15 @@ service =
     }
 
 
-decode : Test
-decode =
-    Test.concat
-        [ test "decodes" <|
-            \() -> Expect.equal (Ok service) (decodeString Service.decoder serviceJson)
+suite : Test
+suite =
+    describe "The Service module"
+        [ describe "categoryToString"
+            [ test "converts to valid URL path" <|
+                \() -> Expect.equal (Service.categoryToString Service.Arts) "arts"
+            ]
+        , describe "decoder"
+            [ test "works on a full JSON array" <|
+                \() -> Expect.equal (Ok service) (decodeString Service.decoder serviceJson)
+            ]
         ]
