@@ -46,7 +46,7 @@ jobs:
       - name: elm-tooling install
         run: npx --no-install elm-tooling install
       - name: Tests
-        run: npm install && npm run build && npm test
+        run: npm install && npm test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
