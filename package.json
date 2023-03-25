@@ -5,7 +5,7 @@
     "start": "elm-pages dev",
     "add": "elm-pages add",
     "build": "elm-pages build",
-    "test": "elm-test-rs"
+    "test": "elm-test"
   },
   "dependencies": {
     "node-fetch": "^2.6.1"

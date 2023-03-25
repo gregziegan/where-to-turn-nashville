@@ -1,4 +1,4 @@
-module Site exposing (config)
+module Site exposing (Data, config)
 
 import DataSource
 import Head

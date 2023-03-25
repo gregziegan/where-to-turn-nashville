@@ -1,9 +1,9 @@
-module Page.Services.Filter__ exposing (Data, Model, Msg, page)
+module Page.Services.Filter__ exposing (Data, Model, Msg, RouteParams, page)
 
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Dict exposing (Dict)
-import Element exposing (DeviceClass(..), Element, column, fill, maximum, padding, paragraph, spacing, text, width)
+import Element exposing (Device, DeviceClass(..), Element, column, fill, maximum, padding, paragraph, spacing, text, width)
 import Element.Font as Font
 import ElmTextSearch exposing (Index)
 import Head
@@ -143,6 +143,7 @@ viewSearchFilteredList toItem services searchResult =
 viewList : (Service -> Element Msg) -> StaticPayload Data RouteParams -> Element Msg
 viewList toItem static =
     let
+        maybeCategory : Maybe Category
         maybeCategory =
             Maybe.andThen Service.categoryFromString static.routeParams.filter
     in
@@ -169,7 +170,7 @@ viewMobile filterText sharedModel static =
                     static.data.services
                     (ElmTextSearch.search query searchIndex)
 
-            ( _, _ ) ->
+            _ ->
                 viewList (Service.listItem 1.7) static
         ]
     ]
@@ -192,7 +193,7 @@ viewDesktop filterText sharedModel static =
                     static.data.services
                     (ElmTextSearch.search query searchIndex)
 
-            ( _, _ ) ->
+            _ ->
                 viewList (Service.largeListItem 1.7) static
         ]
     ]
@@ -205,10 +206,12 @@ view :
     -> View Msg
 view _ sharedModel static =
     let
+        filterText : String
         filterText =
             Maybe.withDefault "All services" <|
                 Maybe.map String.Extra.toSentenceCase static.routeParams.filter
 
+        device : Device
         device =
             Element.classifyDevice sharedModel.window
     in

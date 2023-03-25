@@ -1,6 +1,6 @@
 module Search exposing (Config, allServicesAdded, box, button)
 
-import Element exposing (DeviceClass(..), Element, fill, px, row, spacing, text, width)
+import Element exposing (Element, fill, px, row, spacing, text, width)
 import Element.Input as Input
 import ElmTextSearch
 import FontAwesome
@@ -62,6 +62,7 @@ button { toggleMobile } =
         }
 
 
+viewIcon : Element msg
 viewIcon =
     FontAwesome.icon FontAwesome.search
         |> Element.html

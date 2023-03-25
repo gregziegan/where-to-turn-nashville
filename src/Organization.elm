@@ -2,10 +2,11 @@ module Organization exposing (Organization, decoder, sheetId)
 
 import OptimizedDecoder as Decode exposing (Decoder, int, nullable, string)
 import OptimizedDecoder.Pipeline exposing (custom, decode)
-import Regex
+import Regex exposing (Regex)
 import Schedule exposing (Schedule)
 
 
+sheetId : String
 sheetId =
     "Organizations"
 
@@ -22,6 +23,7 @@ type alias Organization =
     }
 
 
+normalizeSite : Maybe String -> Maybe String
 normalizeSite maybeSite =
     Maybe.map
         (\str ->
@@ -34,10 +36,12 @@ normalizeSite maybeSite =
         maybeSite
 
 
+nonDigitRegex : Regex
 nonDigitRegex =
     Maybe.withDefault Regex.never <| Regex.fromString "[^0-9]"
 
 
+normalizePhone : Maybe String -> Maybe String
 normalizePhone maybePhone =
     Maybe.map
         (Regex.replace nonDigitRegex (\_ -> ""))

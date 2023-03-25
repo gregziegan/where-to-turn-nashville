@@ -1,4 +1,4 @@
-module Page.Services.Detail.Id_ exposing (Data, Model, Msg, page)
+module Page.Services.Detail.Id_ exposing (Data, Model, Msg, RouteParams, page)
 
 import Button
 import DataSource exposing (DataSource)
@@ -65,6 +65,7 @@ routes =
 data : RouteParams -> DataSource Data
 data routeParams =
     let
+        index : Int
         index =
             case String.toInt routeParams.id of
                 Just id ->
@@ -134,8 +135,10 @@ type alias Data =
     ( Maybe Service, Maybe Organization )
 
 
+viewDescription : { a | description : String } -> Element msg
 viewDescription service =
     let
+        services : List String
         services =
             String.split ";" service.description
                 |> List.map String.trim
@@ -149,6 +152,7 @@ viewDescription service =
         ]
 
 
+viewUnorderedList : List String -> Element msg
 viewUnorderedList l =
     column [ width fill ]
         (List.map
@@ -162,6 +166,7 @@ viewUnorderedList l =
         )
 
 
+directionsLink : Element msg
 directionsLink =
     link []
         { url = "/"
@@ -176,6 +181,7 @@ directionsLink =
         }
 
 
+saveLink : Element msg
 saveLink =
     link []
         { url = "/"
@@ -190,6 +196,7 @@ saveLink =
         }
 
 
+smsButton : Element msg
 smsButton =
     Button.transparent
         { onPress = Nothing
@@ -200,6 +207,7 @@ smsButton =
         |> Button.render
 
 
+callLink : String -> Element msg
 callLink phone =
     link []
         { url = "tel:+" ++ phone
@@ -215,6 +223,7 @@ callLink phone =
         }
 
 
+viewHeader : List (Element msg) -> Element msg
 viewHeader children =
     row [ width fill ]
         [ textColumn [ width fill, spacing 5 ]
@@ -222,6 +231,7 @@ viewHeader children =
         ]
 
 
+viewSection : List (Element msg) -> Element msg
 viewSection children =
     row [ width fill ]
         [ textColumn [ width fill, spacing 10, paddingXY 10 0 ]
@@ -229,6 +239,7 @@ viewSection children =
         ]
 
 
+websiteLink : String -> Element msg
 websiteLink website =
     newTabLink []
         { url = website

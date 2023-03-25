@@ -7,12 +7,13 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import FontAwesome exposing (Style(..))
+import FontAwesome
 import Html.Attributes as Attrs
 import Palette
 import Path exposing (Path)
 import Route exposing (Route(..))
 import Search
+import Util
 import Window exposing (Window)
 
 
@@ -183,16 +184,13 @@ viewMobile config =
         [ width (fill |> maximum config.window.width)
         ]
         (viewNavBar True config
-            :: (if config.showMobileSearch then
-                    Element.el
-                        [ width fill
-                        , paddingXY 20 10
-                        ]
-                        (Search.box config.searchConfig)
-
-                else
-                    Element.none
-               )
+            :: Util.renderIf config.showMobileSearch
+                (Element.el
+                    [ width fill
+                    , paddingXY 20 10
+                    ]
+                    (Search.box config.searchConfig)
+                )
             :: viewBackLink config
             :: config.content
         )
@@ -224,11 +222,7 @@ viewNavBar isMobile { window, showMobileMenu, toggleMobileMenu, searchConfig } =
                     []
                )
         )
-        [ if isMobile then
-            menuButton toggleMobileMenu
-
-          else
-            Element.none
+        [ Util.renderIf isMobile (menuButton toggleMobileMenu)
         , if isMobile then
             Element.el
                 [ width fill

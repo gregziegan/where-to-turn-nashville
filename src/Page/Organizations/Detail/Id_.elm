@@ -1,4 +1,4 @@
-module Page.Organizations.Detail.Id_ exposing (Data, Model, Msg, page)
+module Page.Organizations.Detail.Id_ exposing (Data, Model, Msg, RouteParams, page)
 
 import DataSource exposing (DataSource)
 import DataSource.Http
@@ -62,6 +62,7 @@ routes =
 data : RouteParams -> DataSource Data
 data routeParams =
     let
+        index : Int
         index =
             case String.toInt routeParams.id of
                 Just id ->
