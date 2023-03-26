@@ -89,6 +89,7 @@ jobs:
     needs:
       - build
     steps:
+      - uses: actions/checkout@v2
       - name: download generated code
         uses: actions/download-artifact@v3
         with:
