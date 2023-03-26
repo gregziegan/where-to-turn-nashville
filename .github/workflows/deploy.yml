@@ -11,7 +11,7 @@ jobs:
       release_tag: ${{ steps.compute_tag.outputs.next_tag }}
       last_release_tag: ${{ steps.compute_tag.outputs.previous_tag }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Compute release tag
         id: compute_tag
@@ -26,7 +26,7 @@ jobs:
     needs:
       - compute_tags
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js 14
         uses: actions/setup-node@v3
         with:
@@ -54,7 +54,7 @@ jobs:
       # Since `npm ci` removes the node_modules folder before running it’s
       # important to skip this step if cache was restored.
       - name: npm ci
-        # if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
         env:
           # If you have a `"postinstall": "elm-tooling install"` script in your
           # package.json, this turns it into a no-op. We’ll run it in the next
@@ -89,13 +89,15 @@ jobs:
     needs:
       - build
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: download generated code
         uses: actions/download-artifact@v3
         with:
           name: generated
+      - name: elm-tooling install
+        run: npx --no-install elm-tooling install
       - name: test
-        run: npm test
+        run: npm install && npm test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -114,7 +116,7 @@ jobs:
       - compute_tags
     steps:
       # Checkout the ref that contains artifacts
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: main-deploy
 
