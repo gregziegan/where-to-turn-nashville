@@ -20,80 +20,11 @@ jobs:
           github_token: ${{ github.token }}
           version_scheme: continuous
           version_type: major
-  build:
-    name: Build app
-    runs-on: ubuntu-latest
-    needs:
-      - compute_tags
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 14
-        uses: actions/setup-node@v3
-        with:
-          node-version: 14
-      # Re-use node_modules between runs until package-lock.json changes.
-      - name: Cache node_modules
-        id: cache-node_modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/Cypress
-            node_modules
-          key: node_modules-node-v${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
-
-      # Re-use ~/.elm between runs until elm.json, elm-tooling.json or
-      # review/elm.json changes. The Elm compiler saves downloaded Elm packages
-      # to ~/.elm, and elm-tooling saves downloaded tool executables there.
-      - name: Cache ~/.elm
-        uses: actions/cache@v3
-        with:
-          path: ~/.elm
-          key: elm-${{ hashFiles('elm.json', 'elm-tooling.json', 'review/elm.json') }}
-
-      # Install npm packages, unless we restored them from cache.
-      # Since `npm ci` removes the node_modules folder before running it’s
-      # important to skip this step if cache was restored.
-      - name: npm ci
-        if: steps.cache-node_modules.outputs.cache-hit != 'true'
-        env:
-          # If you have a `"postinstall": "elm-tooling install"` script in your
-          # package.json, this turns it into a no-op. We’ll run it in the next
-          # step because of the caching. If elm-tooling.json changes but
-          # package-lock.json does not, the postinstall script needs running
-          # but this step won’t.
-          NO_ELM_TOOLING_INSTALL: 1
-        run: npm ci
-      - name: elm-tooling install
-        run: npx --no-install elm-tooling install
-      - name: build
-        run: npm install && npm run build -- --keep-cache
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          VERSION: ${{ needs.compute_tags.outputs.release_tag }}
-      - name: compress
-        run: zip -r dist.zip dist
-      - name: upload built distribution
-        uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: dist.zip
-      - name: upload generated code
-        uses: actions/upload-artifact@v3
-        with:
-          name: generated
-          path: .elm-pages
   test:
     name: Test app
     runs-on: ubuntu-latest
-    needs:
-      - build
     steps:
       - uses: actions/checkout@v3
-      - name: download generated code
-        uses: actions/download-artifact@v3
-        with:
-          name: generated
       - name: Use Node.js 14
         uses: actions/setup-node@v3
         with:
@@ -143,41 +74,98 @@ jobs:
         run: elm-format --validate src/
       - name: elm-review
         run: ./script/review.sh
+  # build:
+  #   name: Build app
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - compute_tags
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Use Node.js 14
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 14
+  #     # Re-use node_modules between runs until package-lock.json changes.
+  #     - name: Cache node_modules
+  #       id: cache-node_modules
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: |
+  #           ~/.cache/Cypress
+  #           node_modules
+  #         key: node_modules-node-v${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
 
-  release:
-    name: Create release
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs:
-      - compute_tags
-    steps:
-      # Checkout the ref that contains artifacts
-      - uses: actions/checkout@v3
-        with:
-          ref: main-deploy
+  #     # Re-use ~/.elm between runs until elm.json, elm-tooling.json or
+  #     # review/elm.json changes. The Elm compiler saves downloaded Elm packages
+  #     # to ~/.elm, and elm-tooling saves downloaded tool executables there.
+  #     - name: Cache ~/.elm
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.elm
+  #         key: elm-${{ hashFiles('elm.json', 'elm-tooling.json', 'review/elm.json') }}
 
-      - name: Build release message
-        id: release_message
-        run: echo "::set-output name=message::$(git log --format=%B -n 1 ${{ github.sha }})"
+  #     # Install npm packages, unless we restored them from cache.
+  #     # Since `npm ci` removes the node_modules folder before running it’s
+  #     # important to skip this step if cache was restored.
+  #     - name: npm ci
+  #       if: steps.cache-node_modules.outputs.cache-hit != 'true'
+  #       env:
+  #         # If you have a `"postinstall": "elm-tooling install"` script in your
+  #         # package.json, this turns it into a no-op. We’ll run it in the next
+  #         # step because of the caching. If elm-tooling.json changes but
+  #         # package-lock.json does not, the postinstall script needs running
+  #         # but this step won’t.
+  #         NO_ELM_TOOLING_INSTALL: 1
+  #       run: npm ci
+  #     - name: elm-tooling install
+  #       run: npx --no-install elm-tooling install
+  #     - name: build
+  #       run: npm install && npm run build -- --keep-cache
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  #         VERSION: ${{ needs.compute_tags.outputs.release_tag }}
+  #     - name: compress
+  #       run: zip -r dist.zip dist
+  #     - name: upload built distribution
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: dist
+  #         path: dist.zip
+  # release:
+  #   name: Create release
+  #   if: github.ref == 'refs/heads/main'
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - compute_tags
+  #   steps:
+  #     # Checkout the ref that contains artifacts
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         ref: main-deploy
 
-      - name: Push tag
-        run: |
-          git config user.name "Release Bot"
-          git config user.email "not.real@example.com"
-          git push origin "HEAD:refs/tags/$TAG"
-        env:
-          TAG: ${{ needs.compute_tags.outputs.release_tag }}
+  #     - name: Build release message
+  #       id: release_message
+  #       run: echo "::set-output name=message::$(git log --format=%B -n 1 ${{ github.sha }})"
 
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ needs.compute_tags.outputs.release_tag }}
-          release_name: ${{ needs.compute_tags.outputs.release_tag }}
-          body: |
-            This release includes generated configuration artifacts that are dependent on a successful version bump.
-            ### Links
-            * [Pull Request diff](https://github.com/${{ github.repository }}/compare/${{ github.sha }}..${{ needs.compute_tags.outputs.release_tag }})
-            * [Changes since last release](https://github.com/${{ github.repository }}/compare/${{ needs.compute_tags.outputs.last_release_tag }}..${{ needs.compute_tags.outputs.release_tag }})
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+  #     - name: Push tag
+  #       run: |
+  #         git config user.name "Release Bot"
+  #         git config user.email "not.real@example.com"
+  #         git push origin "HEAD:refs/tags/$TAG"
+  #       env:
+  #         TAG: ${{ needs.compute_tags.outputs.release_tag }}
+
+  #     - name: Create release
+  #       id: create_release
+  #       uses: actions/create-release@v1
+  #       with:
+  #         tag_name: ${{ needs.compute_tags.outputs.release_tag }}
+  #         release_name: ${{ needs.compute_tags.outputs.release_tag }}
+  #         body: |
+  #           This release includes generated configuration artifacts that are dependent on a successful version bump.
+  #           ### Links
+  #           * [Pull Request diff](https://github.com/${{ github.repository }}/compare/${{ github.sha }}..${{ needs.compute_tags.outputs.release_tag }})
+  #           * [Changes since last release](https://github.com/${{ github.repository }}/compare/${{ needs.compute_tags.outputs.last_release_tag }}..${{ needs.compute_tags.outputs.release_tag }})
+  #       env:
+  #         GITHUB_TOKEN: ${{ github.token }}
