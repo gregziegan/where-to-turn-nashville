@@ -77,26 +77,6 @@ jobs:
         run: elm-format --validate src/
       - name: elm-review
         run: ./script/review.sh
-  commit_assets:
-    runs-on: ubuntu-latest
-    name: Commit Assets
-    needs:
-      - compute_tags
-    steps:
-      - uses: actions/checkout@v2.3.4
-
-      
-      - id: commit_assets
-        run: |
-          set -ex -o pipefail
-          git config user.name "Release Bot"
-          git config user.email "not.real@example.com"
-          git add -f dist
-          git commit -m "Build application for $GITHUB_SHA"
-          
-          BRANCH_NAME="$(echo "${GITHUB_HEAD_REF:-$GITHUB_REF}" | sed -e 's/refs\/heads\///')-deploy"
-          git push --force origin "HEAD:refs/heads/$BRANCH_NAME"
-          echo "::set-output name=git_branch::$BRANCH_NAME"
   build:
     name: Build app
     runs-on: ubuntu-latest
@@ -143,7 +123,7 @@ jobs:
       - name: elm-tooling install
         run: npx --no-install elm-tooling install
       - name: build
-        run: npm install && npm run build -- --keep-cache
+        run: npm install && npm run build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
