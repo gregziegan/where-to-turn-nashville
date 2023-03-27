@@ -1,25 +1,24 @@
-module Spreadsheet exposing (url, fromSecrets)
+module Spreadsheet exposing (fromSecrets, url)
 
 import Pages.Secrets as Secrets
 
+
 type alias Config =
-     { id : String
+    { id : String
     , sheetId : String
     , selection : String
     , apiKey : String
     , environment : String
     }
 
-    
+
 fromSecrets : String -> String -> Secrets.Value String
 fromSecrets sheetId selection =
-        (Secrets.succeed
-            (\id env apiKey -> url { environment = env, apiKey = apiKey, id = id, sheetId = sheetId, selection = selection })
-            |> Secrets.with "DB_ID"
-            |> Secrets.with "ENV"
-            |> Secrets.with "GOOGLE_API_KEY"
-        )
-    
+    Secrets.succeed
+        (\id env apiKey -> url { environment = env, apiKey = apiKey, id = id, sheetId = sheetId, selection = selection })
+        |> Secrets.with "DB_ID"
+        |> Secrets.with "ENV"
+        |> Secrets.with "GOOGLE_API_KEY"
 
 
 base : String
