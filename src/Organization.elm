@@ -1,4 +1,4 @@
-module Organization exposing (Organization, decoder, sheetId)
+module Organization exposing (Organization, decoder, sheetId, sheetRange)
 
 import OptimizedDecoder as Decode exposing (Decoder, int, nullable, string)
 import OptimizedDecoder.Pipeline exposing (custom, decode)
@@ -10,6 +10,9 @@ sheetId : String
 sheetId =
     "Organizations"
 
+sheetRange : String
+sheetRange =
+    "A2:M"
 
 type alias Organization =
     { id : Int

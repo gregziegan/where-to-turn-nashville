@@ -53,7 +53,6 @@ routes =
                 Service.categories
         )
 
-
 data : RouteParams -> DataSource Data
 data routeParams =
     DataSource.map
@@ -70,10 +69,7 @@ data routeParams =
                 )
         )
         (DataSource.Http.get
-            (Secrets.succeed
-                (Spreadsheet.url Service.sheetId "A2:H")
-                |> Secrets.with "GOOGLE_API_KEY"
-            )
+            (Spreadsheet.fromSecrets Service.sheetId Service.sheetRange)
             (Decode.field "values"
                 (Decode.list Service.decoder |> Decode.map toDict)
             )

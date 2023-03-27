@@ -1,4 +1,4 @@
-module Service exposing (Category(..), Service, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, forGroups, help, largeListItem, listItem, other, sheetId, urgentNeeds, work)
+module Service exposing (Category(..), Service, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, forGroups, help, largeListItem, listItem, other, sheetId, urgentNeeds, work, sheetRange)
 
 import Element exposing (Element, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
 import Element.Border as Border
@@ -13,6 +13,9 @@ sheetId : String
 sheetId =
     "Services"
 
+sheetRange : String
+sheetRange =
+    "A2:H"
 
 type Category
     = Food

@@ -23,6 +23,8 @@ jobs:
   test:
     name: Test app
     runs-on: ubuntu-latest
+    env:
+      ENV: ci
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 14
@@ -64,10 +66,11 @@ jobs:
       - name: elm-tooling install
         run: npx --no-install elm-tooling install
       - name: test
-        run: npm install && npm test
+        run: npm install && npm run build && npm test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          DB_ID: "1TQh_ZpY9Afz1sx7jfVLOXpGXvfvXAGmpQ9k0qP-zyvM"
       - name: Add elm-review, elm and elm-format to path
         run: npm bin >> $GITHUB_PATH
       - name: elm-format
