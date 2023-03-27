@@ -11,7 +11,6 @@ import Head.Seo as Seo
 import OptimizedDecoder as Decode
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Pages.Url
 import Search
 import Service exposing (Category, Service)

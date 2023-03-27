@@ -1,15 +1,6 @@
-module Spreadsheet exposing (fromSecrets, url)
+module Spreadsheet exposing (fromSecrets)
 
 import Pages.Secrets as Secrets
-
-
-type alias Config =
-    { id : String
-    , sheetId : String
-    , selection : String
-    , apiKey : String
-    , environment : String
-    }
 
 
 fromSecrets : String -> String -> Secrets.Value String
@@ -37,7 +28,14 @@ selectionFromEnv environment selection =
            )
 
 
-url : Config -> String
+url :
+    { id : String
+    , sheetId : String
+    , selection : String
+    , apiKey : String
+    , environment : String
+    }
+    -> String
 url { environment, apiKey, id, sheetId, selection } =
     let
         range : String

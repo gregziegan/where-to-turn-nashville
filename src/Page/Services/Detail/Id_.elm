@@ -15,7 +15,6 @@ import OptimizedDecoder as Decode
 import Organization exposing (Organization)
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Pages.Url
 import Schedule
 import Service exposing (Service)
