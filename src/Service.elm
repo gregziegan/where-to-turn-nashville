@@ -1,12 +1,12 @@
-module Service exposing (Category(..), Service, branding, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, forGroups, help, largeListItem, listItem, other, sheetId, sheetRange, urgentNeeds, viewIcon, work)
+module Service exposing (Branding, Category(..), Service, branding, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, forGroups, help, largeListItem, listItem, other, sheetId, sheetRange, urgentNeeds, viewIcon, work)
 
-import Element exposing (Element, centerX, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
+import Element exposing (Element, centerX, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
 import Element.Border as Border
 import Element.Font as Font
 import FontAwesome exposing (Icon, Option(..), Transform(..))
 import OptimizedDecoder as Decode exposing (Decoder, string)
 import OptimizedDecoder.Pipeline exposing (custom, decode, hardcoded)
-import String exposing (words)
+import String
 import String.Extra as String
 import Util exposing (cleanNullableString, cleanString)
 
@@ -569,9 +569,11 @@ decoder =
 briefDescription : Service -> String
 briefDescription service =
     let
+        words : List String
         words =
             String.words service.description
 
+        ellipses : String
         ellipses =
             if List.length words > 10 then
                 "..."

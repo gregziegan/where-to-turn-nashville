@@ -2,7 +2,7 @@ module Chrome exposing (Config, view)
 
 import Breadcrumbs
 import Browser.Navigation
-import Element exposing (Device, DeviceClass(..), Element, alignRight, alignTop, centerX, clipY, column, el, fill, fillPortion, height, link, maximum, minimum, padding, paddingXY, paragraph, px, row, scrollbarY, spacing, text, width)
+import Element exposing (Device, DeviceClass(..), Element, alignRight, alignTop, centerX, clipY, column, el, fill, fillPortion, height, maximum, minimum, padding, paddingXY, paragraph, px, row, scrollbarY, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font

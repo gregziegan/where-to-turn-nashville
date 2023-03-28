@@ -3,7 +3,7 @@ module Page.Organizations.Detail.Id_ exposing (Data, Model, Msg, RouteParams, pa
 import DataSource exposing (DataSource)
 import DataSource.Http
 import DataSource.Port
-import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
+import Element exposing (Element, alignLeft, centerX, column, el, fill, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
 import FontAwesome
 import Head

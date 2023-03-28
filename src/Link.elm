@@ -1,7 +1,7 @@
 module Link exposing (call, directions, menu, resource, website)
 
 import Button
-import Element exposing (Element, el, fill, link, maximum, newTabLink, padding, paragraph, row, spacing, text, width)
+import Element exposing (Element, fill, link, maximum, newTabLink, paragraph, text, width)
 import Element.Font as Font
 import FontAwesome
 import Phone
@@ -19,9 +19,11 @@ menu label path =
 resource : Service.Category -> Element msg
 resource category =
     let
+        branding : Service.Branding
         branding =
             Service.branding category
 
+        path : String
         path =
             Service.categoryToString category
     in

@@ -1,12 +1,10 @@
 module Page.Services.Detail.Id_ exposing (Data, Model, Msg, RouteParams, page)
 
-import Button
 import DataSource exposing (DataSource)
 import DataSource.Http
 import DataSource.Port
-import Element exposing (Element, alignTop, column, el, fill, link, maximum, newTabLink, padding, paddingXY, paragraph, row, spacing, text, textColumn, width)
+import Element exposing (Element, alignTop, column, fill, link, maximum, padding, paddingXY, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
-import FontAwesome
 import Head
 import Head.Seo as Seo
 import Json.Encode
@@ -17,9 +15,7 @@ import OptimizedDecoder as Decode
 import Organization exposing (Organization)
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Pages.Url
-import Phone
 import Service exposing (Category(..), Service)
 import Shared
 import Spreadsheet

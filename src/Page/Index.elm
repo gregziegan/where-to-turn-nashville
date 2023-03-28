@@ -5,14 +5,13 @@ import Element exposing (Element, alignRight, alignTop, centerX, column, fill, f
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import FontAwesome exposing (Option(..), Transform(..))
 import Head
 import Head.Seo as Seo
 import Html.Attributes as Attrs
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
-import Service exposing (Category(..))
+import Service exposing (Category)
 import Shared
 import View exposing (View)
 
@@ -70,6 +69,7 @@ type alias Data =
 viewFilterLink : { a | hasBorders : Bool, isVertical : Bool, fontSize : Int } -> Category -> Element msg
 viewFilterLink { hasBorders, isVertical, fontSize } category =
     let
+        branding : Service.Branding
         branding =
             Service.branding category
     in
