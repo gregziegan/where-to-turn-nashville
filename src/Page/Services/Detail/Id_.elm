@@ -21,6 +21,8 @@ import Shared
 import Spreadsheet
 import Util
 import View exposing (View)
+import Mask
+import Phone
 
 
 type alias Model =
@@ -176,15 +178,19 @@ directionsLink address =
                 |> Button.render
         }
 
-
 callLink : String -> Element msg
 callLink phone =
+    let
+        formattedPhone : String
+        formattedPhone =
+            Phone.format phone
+    in
     link []
         { url = "tel:+" ++ phone
         , label =
             Button.transparent
                 { onPress = Nothing
-                , text = "Call "
+                , text = "Call " ++ formattedPhone
                 }
                 |> Button.fullWidth
                 |> Button.withIcon FontAwesome.phone
@@ -215,7 +221,7 @@ websiteLink website =
         { url = website
         , label =
             row [ spacing 10, padding 10 ]
-                [ text website
+                [ text <| String.replace "https://" "" <| String.replace "https://www." "" website
                 , el [] <| Element.html <| FontAwesome.icon FontAwesome.externalLinkAlt
                 ]
         }
@@ -272,24 +278,6 @@ viewService organization service =
                             ]
                         , viewSection
                             [ paragraph [] [ text applicationProcess ]
-                            ]
-                        ]
-
-                    Nothing ->
-                        []
-               )
-            ++ (case organization.phone of
-                    Just "" ->
-                        []
-
-                    Just phone ->
-                        [ viewHeader
-                            [ paragraph [ Font.bold ] [ text "Contact" ]
-                            ]
-                        , viewSection
-                            [ paragraph
-                                []
-                                [ text ("Phone: " ++ phone) ]
                             ]
                         ]
 

@@ -2,6 +2,7 @@ module Organization exposing (Organization, decoder, sheetId, sheetRange)
 
 import OptimizedDecoder as Decode exposing (Decoder, int, string)
 import OptimizedDecoder.Pipeline exposing (custom, decode)
+import Phone
 import Regex exposing (Regex)
 import String.Extra as String
 import Util exposing (cleanNullableString)
@@ -47,11 +48,20 @@ nonDigitRegex =
     Maybe.withDefault Regex.never <| Regex.fromString "[^0-9]"
 
 
+keepValidPhone : String -> Maybe String
+keepValidPhone phone =
+    if Phone.valid phone then
+        Just phone
+
+    else
+        Nothing
+
+
 normalizePhone : Maybe String -> Maybe String
 normalizePhone maybePhone =
-    Maybe.andThen
-        (String.nonEmpty << Regex.replace nonDigitRegex (\_ -> ""))
-        maybePhone
+    maybePhone
+        |> Maybe.andThen (String.nonEmpty << Regex.replace nonDigitRegex (\_ -> ""))
+        |> Maybe.andThen keepValidPhone
 
 
 decoder : Decoder Organization
