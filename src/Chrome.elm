@@ -30,14 +30,6 @@ logo =
         }
 
 
-starredLink : Element msg
-starredLink =
-    Element.link []
-        { url = "/starred"
-        , label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.star
-        }
-
-
 menuLink : String -> String -> Element msg
 menuLink label path =
     link [ width fill, Font.bold ]
@@ -243,8 +235,7 @@ viewNavBar isMobile { window, showMobileMenu, toggleMobileMenu, searchConfig } =
             , height fill
             , alignRight
             ]
-            [ Element.el [ alignRight ] starredLink
-            , Element.el [] logo
+            [ Element.el [ alignRight ] logo
             ]
         ]
 

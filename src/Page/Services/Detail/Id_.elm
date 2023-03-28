@@ -16,10 +16,10 @@ import Organization exposing (Organization)
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
-import Schedule
 import Service exposing (Service)
 import Shared
 import Spreadsheet
+import Util
 import View exposing (View)
 
 
@@ -162,10 +162,10 @@ viewUnorderedList l =
         )
 
 
-directionsLink : Element msg
-directionsLink =
-    link []
-        { url = "/"
+directionsLink : String -> Element msg
+directionsLink address =
+    newTabLink []
+        { url = "https://www.google.com/maps/dir/?api=1&destination=" ++ address
         , label =
             Button.transparent
                 { onPress = Nothing
@@ -175,32 +175,6 @@ directionsLink =
                 |> Button.withIcon FontAwesome.mapMarker
                 |> Button.render
         }
-
-
-saveLink : Element msg
-saveLink =
-    link []
-        { url = "/"
-        , label =
-            Button.transparent
-                { onPress = Nothing
-                , text = "Add to My Saved"
-                }
-                |> Button.fullWidth
-                |> Button.withIcon FontAwesome.star
-                |> Button.render
-        }
-
-
-smsButton : Element msg
-smsButton =
-    Button.transparent
-        { onPress = Nothing
-        , text = "Text me this info"
-        }
-        |> Button.fullWidth
-        |> Button.withIcon FontAwesome.commentAlt
-        |> Button.render
 
 
 callLink : String -> Element msg
@@ -281,7 +255,7 @@ viewService organization service =
                             [ paragraph [ Font.bold ] [ text "Hours" ]
                             ]
                         , viewSection
-                            [ paragraph [] [ text <| Schedule.toString hours ]
+                            [ paragraph [] [ text hours ]
                             ]
                         ]
 
@@ -324,16 +298,9 @@ viewService organization service =
                )
             ++ [ row [ width fill ]
                     [ column [ width fill, spacing 10 ]
-                        [ directionsLink
-                        , case organization.phone of
-                            Just phone ->
-                                callLink phone
-
-                            Nothing ->
-                                Element.none
+                        [ Util.renderWhenPresent directionsLink organization.address
+                        , Util.renderWhenPresent callLink organization.phone
                         , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
-                        , smsButton
-                        , saveLink
                         ]
                     ]
                ]

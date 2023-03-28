@@ -1,14 +1,14 @@
 module Service exposing (Category(..), Service, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, forGroups, help, largeListItem, listItem, other, sheetId, sheetRange, urgentNeeds, work)
 
-import Element exposing (Element, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
+import Element exposing (DeviceClass(..), Element, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
 import Element.Border as Border
 import Element.Font as Font
 import FontAwesome
 import OptimizedDecoder as Decode exposing (Decoder, string)
 import OptimizedDecoder.Pipeline exposing (custom, decode, hardcoded)
-import Schedule exposing (Schedule)
 import String.Extra as String
-import Element exposing (DeviceClass(..))
+import Util exposing (cleanNullableString, cleanString)
+
 
 sheetId : String
 sheetId =
@@ -204,7 +204,7 @@ type alias Service =
     { id : Int
     , category : Category
     , busLine : Maybe String
-    , hours : Maybe Schedule
+    , hours : Maybe String
     , name : String
     , description : String
     , requirements : Maybe String
@@ -323,12 +323,12 @@ categoryDecoder =
     Decode.string
         |> Decode.andThen
             (\str ->
-                let 
+                let
                     normalizedCategory : String
                     normalizedCategory =
                         str
                             |> String.replace "-" ""
-                            |> String.toLower 
+                            |> String.toLower
                             |> String.clean
                 in
                 Decode.succeed <|
@@ -357,7 +357,7 @@ categoryDecoder =
 
                         "tutoring and career programs" ->
                             JobsAndJobTraining
-                        
+
                         "food children's programs" ->
                             Food
 
@@ -402,7 +402,7 @@ categoryDecoder =
 
                         "section 8 vouchers" ->
                             Housing
-                        
+
                         "section 8 voucher properties" ->
                             Housing
 
@@ -427,7 +427,6 @@ categoryDecoder =
                         "immigrant/refugee services english for a fee" ->
                             ImmigrantsAndRefugees
 
-                        
                         "legal services" ->
                             LegalAid
 
@@ -536,8 +535,10 @@ categoryDecoder =
                         _ ->
                             if String.contains "surrounding county resources" normalizedCategory then
                                 OutsideOfDavidsonCounty
+
                             else if String.contains "youth & family services" normalizedCategory then
                                 ParentingHelp
+
                             else
                                 Housing
             )
@@ -556,10 +557,10 @@ decoder =
                     |> Decode.andThen (\str -> Decode.succeed <| String.join " " <| List.take 4 <| String.words str)
                 )
             )
-        |> custom (Decode.index 2 Decode.string)
-        |> custom (Decode.oneOf [ Decode.index 4 (Decode.nullable Decode.string), Decode.succeed Nothing ])
-        |> custom (Decode.oneOf [ Decode.index 5 (Decode.nullable Decode.string), Decode.succeed Nothing ])
-        |> custom (Decode.oneOf [ Decode.index 6 (Decode.nullable Decode.string), Decode.succeed Nothing ])
+        |> custom (Decode.index 2 cleanString)
+        |> custom (Decode.index 4 cleanNullableString)
+        |> custom (Decode.index 5 cleanNullableString)
+        |> custom (Decode.index 6 cleanNullableString)
         |> hardcoded Nothing
         |> custom (Decode.index 3 string)
 

@@ -28,11 +28,11 @@ service =
     , category = Service.Advocacy
     , busLine = Nothing
     , name = "Handles a broad range"
-    , description = "Handles a broad range of cases to protect livelihood, legal issues, health and safety of low income families. "
+    , description = "Handles a broad range of cases to protect livelihood, legal issues, health and safety of low income families."
     , requirements = Just "Must call beforehand"
     , applicationProcess = Just "1-800-238-1443"
     , hours = Nothing
-    , notes = Just "Services available in all language on website "
+    , notes = Just "Services available in all language on website"
     , address = Nothing
     , organizationName = "Legal Aid Society of Middle Tennessee"
     }
