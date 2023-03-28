@@ -1,71 +1,17 @@
 name: Build and Deploy
 on:
   push:
-  pull_request:
+    branches-ignore:
+      - '**-deploy'
 jobs:
-  # test:
-  #   runs-on: ubuntu-18.04
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Use Node.js 14
-  #       uses: actions/setup-node@v1
-  #       with:
-  #         node-version: 14
-  #     # Re-use node_modules between runs until package-lock.json changes.
-  #     - name: Cache node_modules
-  #       id: cache-node_modules
-  #       uses: actions/cache@v2
-  #       with:
-  #         path: |
-  #           ~/.cache/Cypress
-  #           node_modules
-  #         key: node_modules-node-v${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
-
-  #     # Re-use ~/.elm between runs until elm.json, elm-tooling.json or
-  #     # review/elm.json changes. The Elm compiler saves downloaded Elm packages
-  #     # to ~/.elm, and elm-tooling saves downloaded tool executables there.
-  #     - name: Cache ~/.elm
-  #       uses: actions/cache@v2
-  #       with:
-  #         path: ~/.elm
-  #         key: elm-${{ hashFiles('elm.json', 'elm-tooling.json', 'review/elm.json') }}
-
-  #     # Install npm packages, unless we restored them from cache.
-  #     # Since `npm ci` removes the node_modules folder before running it’s
-  #     # important to skip this step if cache was restored.
-  #     - name: npm ci
-  #       # if: steps.cache-node_modules.outputs.cache-hit != 'true'
-  #       env:
-  #         # If you have a `"postinstall": "elm-tooling install"` script in your
-  #         # package.json, this turns it into a no-op. We’ll run it in the next
-  #         # step because of the caching. If elm-tooling.json changes but
-  #         # package-lock.json does not, the postinstall script needs running
-  #         # but this step won’t.
-  #         NO_ELM_TOOLING_INSTALL: 1
-  #       run: npm ci
-  #     - name: elm-tooling install
-  #       run: npx --no-install elm-tooling install
-  #     - name: Tests
-  #       run: npm install && npm run build && npm test
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-  #     - name: Add elm-review, elm and elm-format to path
-  #       run: npm bin >> $GITHUB_PATH
-  #     # - uses: sparksp/elm-review-action@v1
-  #     #   env:
-  #     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     # - name: elm-format
-  #       # run: npx --no-install elm-format --validate src/
-
   compute_tags:
-    name: Compute Tags
+    name: Compute tags
     runs-on: ubuntu-latest
     outputs:
       release_tag: ${{ steps.compute_tag.outputs.next_tag }}
       last_release_tag: ${{ steps.compute_tag.outputs.previous_tag }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Compute release tag
         id: compute_tag
@@ -74,26 +20,116 @@ jobs:
           github_token: ${{ github.token }}
           version_scheme: continuous
           version_type: major
-      
-  commit_assets:
+  test:
+    name: Test app
     runs-on: ubuntu-latest
-    name: Commit Assets
+    env:
+      ENV: ci
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 14
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+      # Re-use node_modules between runs until package-lock.json changes.
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/Cypress
+            node_modules
+          key: node_modules-node-v${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
+
+      # Re-use ~/.elm between runs until elm.json, elm-tooling.json or
+      # review/elm.json changes. The Elm compiler saves downloaded Elm packages
+      # to ~/.elm, and elm-tooling saves downloaded tool executables there.
+      - name: Cache ~/.elm
+        uses: actions/cache@v3
+        with:
+          path: ~/.elm
+          key: elm-${{ hashFiles('elm.json', 'elm-tooling.json', 'review/elm.json') }}
+
+      # Install npm packages, unless we restored them from cache.
+      # Since `npm ci` removes the node_modules folder before running it’s
+      # important to skip this step if cache was restored.
+      - name: npm ci
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        env:
+          # If you have a `"postinstall": "elm-tooling install"` script in your
+          # package.json, this turns it into a no-op. We’ll run it in the next
+          # step because of the caching. If elm-tooling.json changes but
+          # package-lock.json does not, the postinstall script needs running
+          # but this step won’t.
+          NO_ELM_TOOLING_INSTALL: 1
+        run: npm ci
+      - name: elm-tooling install
+        run: npx --no-install elm-tooling install
+      - name: test
+        run: npm install && npm run build -- --keep-cache && npm test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          DB_ID: "1TQh_ZpY9Afz1sx7jfVLOXpGXvfvXAGmpQ9k0qP-zyvM"
+      - name: Add elm-review, elm and elm-format to path
+        run: npm bin >> $GITHUB_PATH
+      - name: elm-format
+        run: elm-format --validate src/
+      - name: elm-review
+        run: ./script/review.sh
+  build:
+    name: Build app
+    runs-on: ubuntu-latest
     needs:
       - compute_tags
     steps:
-      - uses: actions/checkout@v2.3.4
-
-      - uses: nick-invision/retry@v2
-        name: Build application
+      - uses: actions/checkout@v3
+      - name: Use Node.js 14
+        uses: actions/setup-node@v3
         with:
-          max_attempts: 3
-          timeout_minutes: 3
-          retry_on: error
-          command: npm install && npm run build -- --keep-cache
+          node-version: 14
+      # Re-use node_modules between runs until package-lock.json changes.
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/Cypress
+            node_modules
+          key: node_modules-node-v${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
+
+      # Re-use ~/.elm between runs until elm.json, elm-tooling.json or
+      # review/elm.json changes. The Elm compiler saves downloaded Elm packages
+      # to ~/.elm, and elm-tooling saves downloaded tool executables there.
+      - name: Cache ~/.elm
+        uses: actions/cache@v3
+        with:
+          path: ~/.elm
+          key: elm-${{ hashFiles('elm.json', 'elm-tooling.json', 'review/elm.json') }}
+
+      # Install npm packages, unless we restored them from cache.
+      # Since `npm ci` removes the node_modules folder before running it’s
+      # important to skip this step if cache was restored.
+      - name: npm ci
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
         env:
+          # If you have a `"postinstall": "elm-tooling install"` script in your
+          # package.json, this turns it into a no-op. We’ll run it in the next
+          # step because of the caching. If elm-tooling.json changes but
+          # package-lock.json does not, the postinstall script needs running
+          # but this step won’t.
+          NO_ELM_TOOLING_INSTALL: 1
+        run: npm ci
+      - name: elm-tooling install
+        run: npx --no-install elm-tooling install
+      - name: build
+        run: npm install && npm run build -- --keep-cache
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           VERSION: ${{ needs.compute_tags.outputs.release_tag }}
-      
+          DB_ID: "1TQh_ZpY9Afz1sx7jfVLOXpGXvfvXAGmpQ9k0qP-zyvM"
+          ENV: production
       - id: commit_assets
         run: |
           set -ex -o pipefail
@@ -105,17 +141,16 @@ jobs:
           BRANCH_NAME="$(echo "${GITHUB_HEAD_REF:-$GITHUB_REF}" | sed -e 's/refs\/heads\///')-deploy"
           git push --force origin "HEAD:refs/heads/$BRANCH_NAME"
           echo "::set-output name=git_branch::$BRANCH_NAME"
-  
   release:
-    name: Create Release
+    name: Create release
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: 
-      - commit_assets
+    needs:
       - compute_tags
+      - build
     steps:
       # Checkout the ref that contains artifacts
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: main-deploy
 

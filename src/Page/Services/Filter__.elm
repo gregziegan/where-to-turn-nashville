@@ -1,18 +1,16 @@
-module Page.Services.Filter__ exposing (Data, Model, Msg, page)
+module Page.Services.Filter__ exposing (Data, Model, Msg, RouteParams, page)
 
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Dict exposing (Dict)
-import Element exposing (DeviceClass(..), Element, centerX, column, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width)
+import Element exposing (Device, DeviceClass(..), Element, column, fill, maximum, padding, paragraph, spacing, text, width)
 import Element.Font as Font
 import ElmTextSearch exposing (Index)
 import Head
 import Head.Seo as Seo
 import OptimizedDecoder as Decode
-import Organization exposing (Organization)
-import Page exposing (Page, PageWithState, StaticPayload)
+import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Pages.Url
 import Search
 import Service exposing (Category, Service)
@@ -71,10 +69,7 @@ data routeParams =
                 )
         )
         (DataSource.Http.get
-            (Secrets.succeed
-                (Spreadsheet.url Service.sheetId "A2:P")
-                |> Secrets.with "GOOGLE_API_KEY"
-            )
+            (Spreadsheet.fromSecrets Service.sheetId Service.sheetRange)
             (Decode.field "values"
                 (Decode.list Service.decoder |> Decode.map toDict)
             )
@@ -84,13 +79,13 @@ data routeParams =
 head :
     StaticPayload Data RouteParams
     -> List Head.Tag
-head static =
+head _ =
     Seo.summary
         { canonicalUrlOverride = Nothing
-        , siteName = "elm-pages"
+        , siteName = "Where to turn in Nashville"
         , image =
             { url = Pages.Url.external "TODO"
-            , alt = "elm-pages logo"
+            , alt = "Where to turn in Nashville"
             , dimensions = Nothing
             , mimeType = Nothing
             }
@@ -107,6 +102,7 @@ type alias Data =
     }
 
 
+toDict : List { a | id : comparable } -> Dict comparable { a | id : comparable }
 toDict entities =
     entities
         |> List.map (\e -> ( e.id, e ))
@@ -143,16 +139,18 @@ viewSearchFilteredList toItem services searchResult =
 viewList : (Service -> Element Msg) -> StaticPayload Data RouteParams -> Element Msg
 viewList toItem static =
     let
+        maybeCategory : Maybe Category
         maybeCategory =
             Maybe.andThen Service.categoryFromString static.routeParams.filter
     in
-    column [ spacing 20, width fill ]
+    column [ spacing 20, width (fill |> maximum 800) ]
         (List.filterMap
             (Maybe.map toItem << filterServiceByCategory maybeCategory)
             (Dict.values static.data.services)
         )
 
 
+viewMobile : String -> Shared.Model -> StaticPayload Data RouteParams -> List (Element Msg)
 viewMobile filterText sharedModel static =
     [ column
         [ width (fill |> maximum 1200)
@@ -164,16 +162,17 @@ viewMobile filterText sharedModel static =
             ]
         , case ( sharedModel.searchQuery, static.data.searchIndex ) of
             ( Just query, Just searchIndex ) ->
-                viewSearchFilteredList (Service.listItem 1.7)
+                viewSearchFilteredList Service.listItem
                     static.data.services
                     (ElmTextSearch.search query searchIndex)
 
-            ( _, _ ) ->
-                viewList (Service.listItem 1.7) static
+            _ ->
+                viewList Service.listItem static
         ]
     ]
 
 
+viewDesktop : String -> Shared.Model -> StaticPayload Data RouteParams -> List (Element Msg)
 viewDesktop filterText sharedModel static =
     [ column
         [ width fill
@@ -186,12 +185,12 @@ viewDesktop filterText sharedModel static =
         , case ( sharedModel.searchQuery, static.data.searchIndex ) of
             ( Just query, Just searchIndex ) ->
                 viewSearchFilteredList
-                    (Service.largeListItem 1.7)
+                    Service.largeListItem
                     static.data.services
                     (ElmTextSearch.search query searchIndex)
 
-            ( _, _ ) ->
-                viewList (Service.largeListItem 1.7) static
+            _ ->
+                viewList Service.largeListItem static
         ]
     ]
 
@@ -201,12 +200,16 @@ view :
     -> Shared.Model
     -> StaticPayload Data RouteParams
     -> View Msg
-view maybeUrl sharedModel static =
+view _ sharedModel static =
     let
+        filterText : String
         filterText =
-            Maybe.withDefault "All services" <|
-                Maybe.map String.Extra.toSentenceCase static.routeParams.filter
+            static.routeParams.filter
+                |> Maybe.map String.Extra.toSentenceCase
+                |> Maybe.withDefault "All services"
+                |> String.replace "-" " "
 
+        device : Device
         device =
             Element.classifyDevice sharedModel.window
     in

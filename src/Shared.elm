@@ -1,24 +1,19 @@
-module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
+module Shared exposing (Data, Model, Msg(..), template)
 
 import Browser.Events exposing (onResize)
 import Browser.Navigation
 import Chrome
 import DataSource exposing (DataSource)
-import Dict exposing (Dict)
-import Element exposing (DeviceClass(..), el, fill, padding, width)
+import Dict
+import Element exposing (Device, fill, width)
 import Element.Font as Font
 import Html exposing (Html)
-import Html.Attributes as Attrs
-import OptimizedDecoder as Decode exposing (Decoder, int)
-import OptimizedDecoder.Pipeline exposing (required)
-import Organization exposing (Organization)
+import OptimizedDecoder as Decode
 import Pages.Flags exposing (Flags(..))
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Path exposing (Path)
 import QueryParams
-import Route exposing (Route(..))
-import Service exposing (Service)
+import Route exposing (Route)
 import SharedTemplate exposing (SharedTemplate)
 import View exposing (View)
 import Window exposing (Window)
@@ -47,10 +42,6 @@ type Msg
     | SetWindow Int Int
     | OnSearchChange String
     | OnSearch
-
-
-type SharedMsg
-    = NoOp
 
 
 type alias Model =
@@ -104,7 +95,7 @@ init navigationKey flags maybePagePath =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnPageChange urlPath ->
+        OnPageChange _ ->
             ( { model
                 | showMobileMenu = False
               }
@@ -151,9 +142,7 @@ update msg model =
 
 subscriptions : Path -> Model -> Sub Msg
 subscriptions _ _ =
-    Sub.batch
-        [ onResize SetWindow
-        ]
+    onResize SetWindow
 
 
 type alias Data =
@@ -175,8 +164,9 @@ view :
     -> (Msg -> msg)
     -> View msg
     -> { body : Html msg, title : String }
-view sharedData page model toMsg pageView =
+view _ page model toMsg pageView =
     let
+        device : Device
         device =
             Element.classifyDevice model.window
     in
@@ -198,8 +188,6 @@ view sharedData page model toMsg pageView =
             , showMobileSearch = model.showMobileSearch
             , content = pageView.body
             }
-
-        -- |> Element.map toMsg
         ]
             |> Element.column
                 [ width fill

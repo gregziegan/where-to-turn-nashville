@@ -1,32 +1,25 @@
-module Page.Services.Detail.Id_ exposing (Data, Model, Msg, page)
+module Page.Services.Detail.Id_ exposing (Data, Model, Msg, RouteParams, page)
 
-import Breadcrumbs
-import Button
 import DataSource exposing (DataSource)
 import DataSource.Http
 import DataSource.Port
-import Dict
-import Element exposing (Element, alignLeft, alignRight, alignTop, centerX, column, el, fill, link, maximum, newTabLink, padding, paddingXY, paragraph, row, spacing, text, textColumn, width, wrappedRow)
+import Element exposing (Element, alignTop, column, fill, link, maximum, padding, paddingXY, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
-import Element.Input as Input
-import FontAwesome exposing (Transform)
 import Head
 import Head.Seo as Seo
 import Json.Encode
+import Link exposing (call, directions)
 import List.Extra
-import Mask
+import Map
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
-import Page exposing (Page, PageWithState, StaticPayload)
+import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Pages.Url
-import Path
-import QueryParams
-import Schedule
-import Service exposing (Service)
+import Service exposing (Category(..), Service)
 import Shared
 import Spreadsheet
+import Util
 import View exposing (View)
 
 
@@ -42,6 +35,13 @@ type alias RouteParams =
     { id : String }
 
 
+type alias Data =
+    { service : Maybe Service
+    , organization : Maybe Organization
+    , mapUrl : Maybe String
+    }
+
+
 page : Page RouteParams Data
 page =
     Page.prerender
@@ -55,10 +55,7 @@ page =
 routes : DataSource (List RouteParams)
 routes =
     DataSource.Http.get
-        (Secrets.succeed
-            (Spreadsheet.url Service.sheetId "A2:B")
-            |> Secrets.with "GOOGLE_API_KEY"
-        )
+        (Spreadsheet.fromSecrets Service.sheetId Service.sheetRange)
         (Decode.field "values"
             (Decode.list
                 (Decode.index 0 Decode.int
@@ -71,6 +68,7 @@ routes =
 data : RouteParams -> DataSource Data
 data routeParams =
     let
+        index : Int
         index =
             case String.toInt routeParams.id of
                 Just id ->
@@ -114,18 +112,41 @@ data routeParams =
                             (DataSource.succeed maybeService)
                             (DataSource.succeed Nothing)
             )
+        |> DataSource.andThen
+            (\( maybeService, maybeOrganization ) ->
+                case maybeOrganization of
+                    Just organization ->
+                        DataSource.map3 Data
+                            (DataSource.succeed maybeService)
+                            (DataSource.succeed maybeOrganization)
+                            (case organization.address of
+                                Just address ->
+                                    DataSource.Port.get "mapUrl"
+                                        (Json.Encode.string address)
+                                        (Decode.nullable Decode.string)
+
+                                Nothing ->
+                                    DataSource.succeed Nothing
+                            )
+
+                    Nothing ->
+                        DataSource.map3 Data
+                            (DataSource.succeed maybeService)
+                            (DataSource.succeed Nothing)
+                            (DataSource.succeed Nothing)
+            )
 
 
 head :
     StaticPayload Data RouteParams
     -> List Head.Tag
-head static =
+head _ =
     Seo.summary
         { canonicalUrlOverride = Nothing
-        , siteName = "elm-pages"
+        , siteName = "Where to turn in Nashville"
         , image =
             { url = Pages.Url.external "TODO"
-            , alt = "elm-pages logo"
+            , alt = "Where to turn in Nashville"
             , dimensions = Nothing
             , mimeType = Nothing
             }
@@ -136,12 +157,10 @@ head static =
         |> Seo.website
 
 
-type alias Data =
-    ( Maybe Service, Maybe Organization )
-
-
+viewDescription : { a | description : String } -> Element msg
 viewDescription service =
     let
+        services : List String
         services =
             String.split ";" service.description
                 |> List.map String.trim
@@ -155,6 +174,7 @@ viewDescription service =
         ]
 
 
+viewUnorderedList : List String -> Element msg
 viewUnorderedList l =
     column [ width fill ]
         (List.map
@@ -168,59 +188,7 @@ viewUnorderedList l =
         )
 
 
-directionsLink =
-    link []
-        { url = "/"
-        , label =
-            Button.transparent
-                { onPress = Nothing
-                , text = "Directions"
-                }
-                |> Button.fullWidth
-                |> Button.withIcon FontAwesome.mapMarker
-                |> Button.render
-        }
-
-
-saveLink =
-    link []
-        { url = "/"
-        , label =
-            Button.transparent
-                { onPress = Nothing
-                , text = "Add to My Saved"
-                }
-                |> Button.fullWidth
-                |> Button.withIcon FontAwesome.star
-                |> Button.render
-        }
-
-
-smsButton =
-    Button.transparent
-        { onPress = Nothing
-        , text = "Text me this info"
-        }
-        |> Button.fullWidth
-        |> Button.withIcon FontAwesome.commentAlt
-        |> Button.render
-
-
-callLink phone =
-    link []
-        { url = "tel:+" ++ phone
-        , label =
-            Button.transparent
-                { onPress = Nothing
-                , text = "Call " ++ Mask.string { mask = "(###) ###-####", replace = '#' } phone
-                }
-                |> Button.fullWidth
-                |> Button.withIcon FontAwesome.phone
-                |> Button.withIconOptions [ FontAwesome.Transform [ FontAwesome.FlipHorizontal ] ]
-                |> Button.render
-        }
-
-
+viewHeader : List (Element msg) -> Element msg
 viewHeader children =
     row [ width fill ]
         [ textColumn [ width fill, spacing 5 ]
@@ -228,6 +196,7 @@ viewHeader children =
         ]
 
 
+viewSection : List (Element msg) -> Element msg
 viewSection children =
     row [ width fill ]
         [ textColumn [ width fill, spacing 10, paddingXY 10 0 ]
@@ -235,20 +204,9 @@ viewSection children =
         ]
 
 
-websiteLink website =
-    newTabLink []
-        { url = website
-        , label =
-            row [ spacing 10, padding 10 ]
-                [ text website
-                , el [] <| Element.html <| FontAwesome.icon FontAwesome.externalLinkAlt
-                ]
-        }
-
-
-viewService : Organization -> Service -> Element Msg
-viewService organization service =
-    column [ width fill, padding 10, spacing 10 ]
+viewService : Maybe String -> Organization -> Service -> Element Msg
+viewService mapUrl organization service =
+    column [ width (fill |> maximum 800), padding 10, spacing 10 ]
         ([ viewHeader
             [ paragraph [ Font.bold ] [ text organization.name ]
             , link [] { url = "/organizations/detail/" ++ String.fromInt organization.id, label = paragraph [ Font.italic ] [ text "Organization" ] }
@@ -280,7 +238,7 @@ viewService organization service =
                             [ paragraph [ Font.bold ] [ text "Hours" ]
                             ]
                         , viewSection
-                            [ paragraph [] [ text <| Schedule.toString hours ]
+                            [ paragraph [] [ text hours ]
                             ]
                         ]
 
@@ -303,37 +261,20 @@ viewService organization service =
                     Nothing ->
                         []
                )
-            ++ (case organization.phone of
-                    Just "" ->
-                        []
-
-                    Just phone ->
-                        [ viewHeader
-                            [ paragraph [ Font.bold ] [ text "Contact" ]
-                            ]
-                        , viewSection
-                            [ paragraph
-                                []
-                                [ text ("Phone: " ++ phone) ]
-                            ]
-                        ]
-
-                    Nothing ->
-                        []
-               )
             ++ [ row [ width fill ]
                     [ column [ width fill, spacing 10 ]
-                        [ directionsLink
-                        , case organization.phone of
-                            Just phone ->
-                                callLink phone
+                        ([ Maybe.withDefault Element.none <| Maybe.map Link.website organization.website
+                         , Util.renderWhenPresent call organization.phone
+                         ]
+                            ++ (if service.category == OutsideOfDavidsonCounty then
+                                    []
 
-                            Nothing ->
-                                Element.none
-                        , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
-                        , smsButton
-                        , saveLink
-                        ]
+                                else
+                                    [ Util.renderWhenPresent directions organization.address
+                                    , Util.renderWhenPresent Map.view mapUrl
+                                    ]
+                               )
+                        )
                     ]
                ]
         )
@@ -344,7 +285,7 @@ view :
     -> Shared.Model
     -> StaticPayload Data RouteParams
     -> View Msg
-view maybeUrl sharedModel static =
+view _ _ static =
     { title = "Where to turn in Nashville | Service"
     , body =
         [ column
@@ -352,9 +293,9 @@ view maybeUrl sharedModel static =
             , padding 10
             , spacing 10
             ]
-            [ case static.data of
-                ( Just service, Just organization ) ->
-                    viewService organization service
+            [ case ( static.data.service, static.data.organization, static.data.mapUrl ) of
+                ( Just service, Just organization, mapUrl ) ->
+                    viewService mapUrl organization service
 
                 _ ->
                     text "Service not found"

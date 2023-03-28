@@ -1,27 +1,24 @@
-module Page.Organizations.Detail.Id_ exposing (Data, Model, Msg, page)
+module Page.Organizations.Detail.Id_ exposing (Data, Model, Msg, RouteParams, page)
 
-import Breadcrumbs
 import DataSource exposing (DataSource)
 import DataSource.Http
 import DataSource.Port
-import Dict
-import Element exposing (Element, alignLeft, centerX, column, el, fill, link, maximum, padding, paragraph, row, spacing, text, textColumn, width, wrappedRow)
+import Element exposing (Element, alignLeft, centerX, column, el, fill, maximum, padding, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
-import Element.Input as Input
 import FontAwesome
 import Head
 import Head.Seo as Seo
 import Json.Encode
+import Link
 import List.Extra
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
-import Page exposing (Page, PageWithState, StaticPayload)
+import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Pages.Url
-import Service
 import Shared
 import Spreadsheet
+import Util
 import View exposing (View)
 
 
@@ -50,10 +47,7 @@ page =
 routes : DataSource (List RouteParams)
 routes =
     DataSource.Http.get
-        (Secrets.succeed
-            (Spreadsheet.url Organization.sheetId "A2:B")
-            |> Secrets.with "GOOGLE_API_KEY"
-        )
+        (Spreadsheet.fromSecrets Organization.sheetId Organization.sheetRange)
         (Decode.field "values"
             (Decode.list
                 (Decode.index 0 Decode.int
@@ -66,6 +60,7 @@ routes =
 data : RouteParams -> DataSource Data
 data routeParams =
     let
+        index : Int
         index =
             case String.toInt routeParams.id of
                 Just id ->
@@ -90,13 +85,13 @@ data routeParams =
 head :
     StaticPayload Data RouteParams
     -> List Head.Tag
-head static =
+head _ =
     Seo.summary
         { canonicalUrlOverride = Nothing
-        , siteName = "elm-pages"
+        , siteName = "Where to turn in Nashville"
         , image =
             { url = Pages.Url.external "TODO"
-            , alt = "elm-pages logo"
+            , alt = "Where to turn in Nashville"
             , dimensions = Nothing
             , mimeType = Nothing
             }
@@ -111,6 +106,7 @@ type alias Data =
     Maybe Organization
 
 
+viewSection : List (Element msg) -> Element msg
 viewSection children =
     row [ width fill ]
         [ textColumn [ width fill, spacing 10, padding 10 ]
@@ -120,24 +116,23 @@ viewSection children =
 
 viewOrganization : Organization -> Element msg
 viewOrganization organization =
-    column [ width fill, spacing 10 ]
+    column [ width (fill |> maximum 800), spacing 10 ]
         [ viewSection
             [ paragraph [ Font.bold ] [ text organization.name ]
             , el [ alignLeft ] <| Element.html <| FontAwesome.iconWithOptions FontAwesome.infoCircle FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
             , paragraph [ Font.italic ] [ text "Organization" ]
             ]
-        , case organization.website of
-            Just "" ->
-                Element.none
-
-            Just websiteLink ->
+        , Util.renderWhenPresent
+            (\notes ->
                 viewSection
-                    [ paragraph [ Font.bold ] [ text "Website" ]
-                    , link [] { url = websiteLink, label = text websiteLink }
+                    [ paragraph [ Font.bold ] [ text "Description" ]
+                    , paragraph [] [ text notes ]
                     ]
-
-            Nothing ->
-                Element.none
+            )
+            organization.notes
+        , Util.renderWhenPresent Link.directions organization.address
+        , Util.renderWhenPresent Link.call organization.phone
+        , Util.renderWhenPresent Link.website organization.website
         ]
 
 
@@ -146,7 +141,7 @@ view :
     -> Shared.Model
     -> StaticPayload Data RouteParams
     -> View Msg
-view maybeUrl sharedModel static =
+view _ _ static =
     { title = "Where to turn in Nashville | Organization"
     , body =
         [ column

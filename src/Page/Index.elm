@@ -1,19 +1,17 @@
-module Page.Index exposing (Data, Model, Msg, page)
+module Page.Index exposing (Data, Model, Msg, RouteParams, page)
 
 import DataSource exposing (DataSource)
-import Element exposing (alignLeft, alignRight, alignTop, centerX, column, el, fill, fillPortion, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
-import Element.Background as Background
+import Element exposing (Element, alignRight, alignTop, centerX, column, fill, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import FontAwesome exposing (Option(..), Transform(..))
 import Head
 import Head.Seo as Seo
 import Html.Attributes as Attrs
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
-import Service exposing (Category(..))
+import Service exposing (Category)
 import Shared
 import View exposing (View)
 
@@ -47,7 +45,7 @@ data =
 head :
     StaticPayload Data RouteParams
     -> List Head.Tag
-head static =
+head _ =
     Seo.summary
         { canonicalUrlOverride = Nothing
         , siteName = "where-to-turn-nashville"
@@ -68,13 +66,15 @@ type alias Data =
     ()
 
 
-viewFilterLink { hasBorders, isVertical, fontSize } filter =
+viewFilterLink : { a | hasBorders : Bool, isVertical : Bool, fontSize : Int } -> Category -> Element msg
+viewFilterLink { hasBorders, isVertical, fontSize } category =
     let
-        ( icon, options, title ) =
-            filterDetails filter
+        branding : Service.Branding
+        branding =
+            Service.branding category
     in
     Element.link [ width fill ]
-        { url = "/services/" ++ Service.categoryToString filter
+        { url = "/services/" ++ Service.categoryToString category
         , label =
             Input.button
                 ([ width (px 140)
@@ -96,127 +96,25 @@ viewFilterLink { hasBorders, isVertical, fontSize } filter =
                 , label =
                     if isVertical then
                         column [ width fill, paddingXY 5 0, spacing 10 ]
-                            [ Element.el [ Font.center, centerX ] <|
-                                Element.html <|
-                                    FontAwesome.iconWithOptions icon FontAwesome.Solid ([ FontAwesome.Size (FontAwesome.Mult 2) ] ++ options) []
-                            , paragraph [ Font.center, Font.size fontSize ] [ text title ]
+                            [ Service.viewIcon branding
+                            , paragraph [ Font.center, Font.size fontSize ] [ text branding.title ]
                             ]
 
                     else
                         row [ paddingXY 5 0, width fill ]
-                            [ Element.el [ alignRight ] <|
-                                Element.html <|
-                                    FontAwesome.iconWithOptions icon FontAwesome.Solid ([ FontAwesome.Size (FontAwesome.Mult 2) ] ++ options) []
+                            [ Service.viewIcon branding
                             , paragraph
                                 [ Font.size fontSize
                                 , Font.center
                                 , paddingXY 5 0
                                 ]
-                                [ text title ]
+                                [ text branding.title ]
                             ]
                 }
         }
 
 
-filterDetails filter =
-    case filter of
-        Food ->
-            ( FontAwesome.utensils, [], "Food" )
-
-        Housing ->
-            ( FontAwesome.home, [], "Housing" )
-
-        PersonalCare ->
-            ( FontAwesome.shower, [], "Personal care" )
-
-        RentAndUtilitiesAssistance ->
-            ( FontAwesome.moneyCheckAlt, [], "Rent and utilities assistance" )
-
-        MedicalCare ->
-            ( FontAwesome.stethoscope, [], "Medical care" )
-
-        MentalHealth ->
-            ( FontAwesome.brain, [], "Mental health" )
-
-        AddictionServices ->
-            ( FontAwesome.wineBottle, [], "Addiction services" )
-
-        NursingHomesAndHospice ->
-            ( FontAwesome.bed, [], "Nursing homes and hospice" )
-
-        DentalAndHearing ->
-            ( FontAwesome.tooth, [], "Dental and hearing" )
-
-        HivPrepHepC ->
-            ( FontAwesome.ribbon, [], "HIV, PrEP, and Hep C" )
-
-        Transportation ->
-            ( FontAwesome.bus, [], "Transportation" )
-
-        Internet ->
-            ( FontAwesome.wifi, [], "Internet" )
-
-        Phones ->
-            ( FontAwesome.mobile, [], "Phones" )
-
-        LegalAid ->
-            ( FontAwesome.balanceScale, [], "Legal aid" )
-
-        DomesticViolence ->
-            ( FontAwesome.fistRaised, [ Transform [ Rotate 90 ] ], "Domestic violence" )
-
-        SexualAssault ->
-            ( FontAwesome.exclamationTriangle, [], "Sexual assault" )
-
-        IDsAndSSI ->
-            ( FontAwesome.idCard, [], "IDs and SSI" )
-
-        JobsAndJobTraining ->
-            ( FontAwesome.briefcase, [], "Jobs and job training" )
-
-        AdultEducation ->
-            ( FontAwesome.graduationCap, [], "Adult education" )
-
-        TutorsAndMentoring ->
-            ( FontAwesome.school, [], "Tutors and mentoring" )
-
-        Childcare ->
-            ( FontAwesome.hands, [], "Childcare" )
-
-        ParentingHelp ->
-            ( FontAwesome.handHoldingHeart, [], "Parenting help" )
-
-        SeniorsAndDisabilities ->
-            ( FontAwesome.wheelchair, [], "Seniors and people with disabilities" )
-
-        LGBTQPlus ->
-            ( FontAwesome.flag, [], "LGBTQ+" )
-
-        Veterans ->
-            ( FontAwesome.medal, [], "Veterans" )
-
-        ImmigrantsAndRefugees ->
-            ( FontAwesome.globeAfrica, [], "Immigrants and refugees" )
-
-        FormerlyIncarcerated ->
-            ( FontAwesome.box, [], "Formerly incarcerated" )
-
-        OnSexOffenderRegistry ->
-            ( FontAwesome.list, [], "On sex offender registry" )
-
-        PetHelp ->
-            ( FontAwesome.dog, [], "Pet help" )
-
-        OutsideOfDavidsonCounty ->
-            ( FontAwesome.mapSigns, [], "Outside of Davidson Co." )
-
-        Arts ->
-            ( FontAwesome.theaterMasks, [], "Arts" )
-
-        Advocacy ->
-            ( FontAwesome.handshake, [], "Advocacy" )
-
-
+viewWelcomeBanner : Element msg
 viewWelcomeBanner =
     row [ width fill ]
         [ textColumn [ width fill ]
@@ -229,56 +127,12 @@ viewWelcomeBanner =
         ]
 
 
-viewHelpBanner =
-    row
-        [ width fill
-        ]
-        [ column
-            [ width fill
-            , padding 10
-            , Border.width 1
-            , Border.rounded 15
-            ]
-            [ row
-                [ width fill
-                , spacing 10
-                ]
-                [ textColumn [ width (fillPortion 20) ]
-                    [ paragraph
-                        [ width fill
-                        , Font.center
-                        , Font.size 16
-                        ]
-                        [ text "Not sure where to start?"
-                        ]
-                    , paragraph
-                        [ width fill
-                        , Font.center
-                        , Font.size 12
-                        ]
-                        [ text "Answer questions to help us find the best resources for you." ]
-                    ]
-                , link [ width (fillPortion 1) ]
-                    { url = "/help"
-                    , label =
-                        Input.button
-                            [ Border.width 1
-                            , centerX
-                            , padding 10
-                            ]
-                            { label = text "Find help"
-                            , onPress = Nothing
-                            }
-                    }
-                ]
-            ]
-        ]
-
-
+viewMoreLink : Element msg
 viewMoreLink =
     link [ alignRight, Font.underline, Font.size 14 ] { url = "/", label = text "More" }
 
 
+viewGroup : CellConfig -> String -> List Category -> Element msg
 viewGroup cellConfig title categories =
     column
         [ width fill
@@ -296,6 +150,7 @@ viewGroup cellConfig title categories =
         ]
 
 
+viewGroupAlt : CellConfig -> String -> List Category -> Element msg
 viewGroupAlt cellConfig title categories =
     column
         [ width fill
@@ -307,6 +162,14 @@ viewGroupAlt cellConfig title categories =
         ]
 
 
+type alias CellConfig =
+    { hasBorders : Bool
+    , isVertical : Bool
+    , fontSize : Int
+    }
+
+
+defaultCellConfig : CellConfig
 defaultCellConfig =
     { hasBorders = True
     , isVertical = True
@@ -319,7 +182,7 @@ view :
     -> Shared.Model
     -> StaticPayload Data RouteParams
     -> View Msg
-view maybeUrl sharedModel static =
+view _ _ _ =
     { title = "Where to turn in Nashville"
     , body =
         [ column
@@ -333,7 +196,6 @@ view maybeUrl sharedModel static =
                 , spacing 20
                 ]
                 [ viewWelcomeBanner
-                , viewHelpBanner
                 , viewGroup { defaultCellConfig | isVertical = False, fontSize = 12 } "Urgent needs" Service.urgentNeeds
                 , viewGroup { defaultCellConfig | fontSize = 12 } "Get care" Service.care
                 , viewGroupAlt { defaultCellConfig | hasBorders = False } "Get connected" Service.connectivity

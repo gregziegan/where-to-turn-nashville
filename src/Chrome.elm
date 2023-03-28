@@ -2,24 +2,29 @@ module Chrome exposing (Config, view)
 
 import Breadcrumbs
 import Browser.Navigation
-import Element exposing (Device, DeviceClass(..), Element, alignLeft, alignRight, alignTop, centerX, clipY, column, el, fill, fillPortion, height, link, maximum, minimum, padding, paddingXY, paragraph, px, row, scrollbarY, spacing, text, width)
+import Element exposing (Device, DeviceClass(..), Element, alignRight, alignTop, centerX, clipY, column, el, fill, fillPortion, height, maximum, minimum, padding, paddingXY, paragraph, px, row, scrollbarY, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import FontAwesome exposing (Style(..))
+import FontAwesome
 import Html.Attributes as Attrs
+import Link
 import Palette
 import Path exposing (Path)
 import Route exposing (Route(..))
 import Search
+import Service exposing (Category(..))
+import Util
 import Window exposing (Window)
 
 
+menuButton : msg -> Element msg
 menuButton toggleMenu =
     Input.button [] { onPress = Just toggleMenu, label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.bars }
 
 
+logo : Element msg
 logo =
     Element.link []
         { url = "/"
@@ -27,29 +32,7 @@ logo =
         }
 
 
-starredLink =
-    Element.link []
-        { url = "/starred"
-        , label = Element.el [] <| Element.html <| FontAwesome.icon FontAwesome.star
-        }
-
-
-menuLink label path =
-    link [ width fill, Font.bold ]
-        { url = path
-        , label = text label
-        }
-
-
-resourceLink label path =
-    link
-        [ width fill
-        ]
-        { url = path
-        , label = paragraph [ width (fill |> maximum 280) ] [ text label ]
-        }
-
-
+viewMenuDrawer : Window -> msg -> Element msg
 viewMenuDrawer window toggleMenu =
     column
         [ width fill
@@ -80,33 +63,35 @@ viewMenuDrawer window toggleMenu =
         []
 
 
+viewMenuLink : Element msg -> Element msg
 viewMenuLink aLink =
     row [ width fill, padding 10 ] [ aLink ]
 
 
+resourceLinks : List (Element msg)
 resourceLinks =
-    [ resourceLink "Special populations" "/"
-    , resourceLink "Housing" "/"
-    , resourceLink "Food" "/"
-    , resourceLink "Personal care" "/"
-    , resourceLink "Rent and utilities assistance" "/"
-    , resourceLink "Healthcare" "/"
-    , resourceLink "Jobs and education" "/"
-    , resourceLink "Legal aid, IDs and SSI" "/"
-    , resourceLink "Domestic violence and sexual assault" "/"
-    , resourceLink "Transportation" "/"
-    , resourceLink "Phones and internet" "/"
-    , resourceLink "Family and youth resources" "/"
-    , resourceLink "Pets" "/"
-    , resourceLink "Arts" "/"
-    , resourceLink "Advocacy" "/"
-    , resourceLink "Outside Davidson County" "/"
+    [ Link.resource SeniorsAndDisabilities
+    , Link.resource Housing
+    , Link.resource Food
+    , Link.resource PersonalCare
+    , Link.resource RentAndUtilitiesAssistance
+    , Link.resource MedicalCare
+    , Link.resource JobsAndJobTraining
+    , Link.resource LegalAid
+    , Link.resource DomesticViolence
+    , Link.resource Transportation
+    , Link.resource Phones
+    , Link.resource PetHelp
+    , Link.resource Arts
+    , Link.resource Advocacy
+    , Link.resource OutsideOfDavidsonCounty
     ]
 
 
+viewMenu : Element msg
 viewMenu =
     column [ width fill ]
-        [ viewMenuLink <| menuLink "Home" "/"
+        [ viewMenuLink <| Link.menu "Home" "/"
         , row [ width fill, padding 10 ]
             [ column [ width fill ]
                 [ paragraph [ Font.bold ] [ text "Resources" ]
@@ -117,15 +102,12 @@ viewMenu =
                     (List.map viewMenuLink resourceLinks)
                 ]
             ]
-        , viewMenuLink <| menuLink "Order the guide" "/"
-        , viewMenuLink <| menuLink "Add or edit a listing" "/"
-        , viewMenuLink <| menuLink "About" "/"
-        , viewMenuLink <| menuLink "Other resources" "/"
-        , viewMenuLink <| menuLink "My Saved" "/saved"
+        , viewMenuLink <| Link.menu "About" "/about"
         ]
 
 
-viewPersistentMenu config =
+viewPersistentMenu : Config msg -> Element msg
+viewPersistentMenu _ =
     column
         [ width (fillPortion 1)
         , alignTop
@@ -153,6 +135,7 @@ type alias Config msg =
     }
 
 
+viewBackLink : Config msg -> Element msg
 viewBackLink { goBack, navKey, page } =
     case page.route of
         Just Index ->
@@ -166,30 +149,30 @@ viewBackLink { goBack, navKey, page } =
             Element.none
 
 
+viewMobile : Config msg -> Element msg
 viewMobile config =
     column
         [ width (fill |> maximum config.window.width)
         ]
         (viewNavBar True config
-            :: (if config.showMobileSearch then
-                    Element.el
-                        [ width fill
-                        , paddingXY 20 10
-                        ]
-                        (Search.box config.searchConfig)
-
-                else
-                    Element.none
-               )
+            :: Util.renderIf config.showMobileSearch
+                (Element.el
+                    [ width fill
+                    , paddingXY 20 10
+                    ]
+                    (Search.box config.searchConfig)
+                )
             :: viewBackLink config
             :: config.content
         )
 
 
+navBarHeight : number
 navBarHeight =
     80
 
 
+viewNavBar : Bool -> Config msg -> Element msg
 viewNavBar isMobile { window, showMobileMenu, toggleMobileMenu, searchConfig } =
     row
         ([ width fill
@@ -210,11 +193,7 @@ viewNavBar isMobile { window, showMobileMenu, toggleMobileMenu, searchConfig } =
                     []
                )
         )
-        [ if isMobile then
-            menuButton toggleMobileMenu
-
-          else
-            Element.none
+        [ Util.renderIf isMobile (menuButton toggleMobileMenu)
         , if isMobile then
             Element.el
                 [ width fill
@@ -235,16 +214,17 @@ viewNavBar isMobile { window, showMobileMenu, toggleMobileMenu, searchConfig } =
             , height fill
             , alignRight
             ]
-            [ Element.el [ alignRight ] starredLink
-            , Element.el [] logo
+            [ Element.el [ alignRight ] logo
             ]
         ]
 
 
+paneHeight : Config msg -> Int
 paneHeight config =
     config.window.height - navBarHeight
 
 
+viewPanes : Config msg -> Element msg
 viewPanes config =
     row
         [ width fill
@@ -263,6 +243,7 @@ viewPanes config =
         ]
 
 
+viewDesktop : Config msg -> Element msg
 viewDesktop config =
     column
         [ width fill

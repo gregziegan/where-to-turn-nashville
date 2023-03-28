@@ -6,3 +6,5 @@ functions/render/elm-pages-cli.js
 .secrets*
 .env.dev
 .vscode
+*.zip
+.DS_Store
