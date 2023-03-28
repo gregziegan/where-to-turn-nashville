@@ -7,7 +7,8 @@ import FontAwesome
 import OptimizedDecoder as Decode exposing (Decoder, string)
 import OptimizedDecoder.Pipeline exposing (custom, decode, hardcoded)
 import Schedule exposing (Schedule)
-
+import String.Extra as String
+import Element exposing (DeviceClass(..))
 
 sheetId : String
 sheetId =
@@ -322,44 +323,223 @@ categoryDecoder =
     Decode.string
         |> Decode.andThen
             (\str ->
+                let 
+                    normalizedCategory : String
+                    normalizedCategory =
+                        str
+                            |> String.replace "-" ""
+                            |> String.toLower 
+                            |> String.clean
+                in
                 Decode.succeed <|
-                    case str of
-                        "Advocacy" ->
+                    case normalizedCategory of
+                        "advocacy" ->
                             Advocacy
 
-                        "Arts" ->
+                        "arts" ->
                             Arts
 
                         -- need to create a new category
-                        "Clothing, Day Shelters, and Showers - Clothing" ->
+                        "clothing, day shelters, and showers clothing" ->
                             PersonalCare
 
-                        "Clothing, Day Shelters, and Showers- Clothing and Hygiene" ->
+                        "clothing, day shelters, and showers showers" ->
                             PersonalCare
 
-                        "HiSET Classes" ->
+                        "clothing, day shelters, and showers clothing and hygiene" ->
+                            PersonalCare
+
+                        "hiset classes" ->
                             AdultEducation
 
-                        "Financial Education" ->
+                        "financial education" ->
                             AdultEducation
 
-                        "Tutoring And Career Programs" ->
+                        "tutoring and career programs" ->
+                            JobsAndJobTraining
+                        
+                        "food children's programs" ->
+                            Food
+
+                        "food emergency food boxes" ->
+                            Food
+
+                        "food community garden" ->
+                            Food
+
+                        "food food pantry" ->
+                            Food
+
+                        "food free groceries" ->
+                            Food
+
+                        "food food box" ->
+                            Food
+
+                        "food snap" ->
+                            Food
+
+                        "food wic (women, infants and children) program" ->
+                            Food
+
+                        "employment" ->
                             JobsAndJobTraining
 
-                        "Food - Emergency Food Boxes" ->
-                            Food
+                        "formerly incarcerated" ->
+                            FormerlyIncarcerated
 
-                        "Food- Free groceries" ->
-                            Food
+                        "housing domestic violence shelters" ->
+                            Housing
 
-                        "Food- Food box" ->
-                            Food
+                        "housing emergency shelters" ->
+                            Housing
 
-                        "Food - Wic (women, Infants And Children) Program" ->
-                            Food
+                        "housing rent and utilities assistance" ->
+                            Housing
+
+                        "housing transitional housing & halfway houses" ->
+                            Housing
+
+                        "section 8 vouchers" ->
+                            Housing
+                        
+                        "section 8 voucher properties" ->
+                            Housing
+
+                        "housing for people over 65 and on disability" ->
+                            Housing
+
+                        "housing for people under 62 who are not recieving disability and do not have a section 8 voucher" ->
+                            Housing
+
+                        "housing for people on the sex offender registry" ->
+                            Housing
+
+                        "housing agencies and resources" ->
+                            Housing
+
+                        "motels" ->
+                            Housing
+
+                        "immigrant/refugee services" ->
+                            ImmigrantsAndRefugees
+
+                        "immigrant/refugee services english for a fee" ->
+                            ImmigrantsAndRefugees
+
+                        
+                        "legal services" ->
+                            LegalAid
+
+                        "addiction services" ->
+                            AddictionServices
+
+                        "addiction peer support / 12 step groups" ->
+                            AddictionServices
+
+                        "addiction women's alcohol/substance abuse groups" ->
+                            AddictionServices
+
+                        "addiction recovering housing with 12-step programs" ->
+                            AddictionServices
+
+                        "addiction intensive outpatient programs" ->
+                            AddictionServices
+
+                        "addiction detox/inpatient help" ->
+                            AddictionServices
+
+                        "addiction - outpatient \"mat\" services (buprenorphine)" ->
+                            AddictionServices
+
+                        "mental health services" ->
+                            MentalHealth
+
+                        "counseling services" ->
+                            MentalHealth
+
+                        "health providers" ->
+                            MedicalCare
+
+                        "reproductive health care" ->
+                            MedicalCare
+
+                        "sexual assault care" ->
+                            SexualAssault
+
+                        "medical specialists" ->
+                            MedicalCare
+
+                        "medical respite care" ->
+                            MedicalCare
+
+                        "nursing home care" ->
+                            NursingHomesAndHospice
+
+                        "prep, hiv, hep c treatment" ->
+                            HivPrepHepC
+
+                        "transgender hormone therapy" ->
+                            MedicalCare
+
+                        "hospice care" ->
+                            NursingHomesAndHospice
+
+                        "dental care" ->
+                            DentalAndHearing
+
+                        "denture care" ->
+                            DentalAndHearing
+
+                        "hearing care" ->
+                            DentalAndHearing
+
+                        "transportation to medical appointments" ->
+                            Transportation
+
+                        "medication resources" ->
+                            MedicalCare
+
+                        "medical resources for refugees and immigrants" ->
+                            MedicalCare
+
+                        "hospitals & financial assistance" ->
+                            MedicalCare
+
+                        "pets" ->
+                            PetHelp
+
+                        "phones" ->
+                            Phones
+
+                        "social services" ->
+                            MedicalCare
+
+                        "social services disability advocacy" ->
+                            SeniorsAndDisabilities
+
+                        "social services how to apply for a tn state i.d." ->
+                            IDsAndSSI
+
+                        "social services senior services" ->
+                            SeniorsAndDisabilities
+
+                        "social services social security cards" ->
+                            IDsAndSSI
+
+                        "transportation" ->
+                            Transportation
+
+                        "veterans services" ->
+                            Veterans
 
                         _ ->
-                            Housing
+                            if String.contains "surrounding county resources" normalizedCategory then
+                                OutsideOfDavidsonCounty
+                            else if String.contains "youth & family services" normalizedCategory then
+                                ParentingHelp
+                            else
+                                Housing
             )
 
 
