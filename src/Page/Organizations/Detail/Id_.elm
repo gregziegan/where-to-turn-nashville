@@ -9,6 +9,7 @@ import FontAwesome
 import Head
 import Head.Seo as Seo
 import Json.Encode
+import Link
 import List.Extra
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
@@ -17,6 +18,7 @@ import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
 import Shared
 import Spreadsheet
+import Util
 import View exposing (View)
 
 
@@ -114,24 +116,20 @@ viewSection children =
 
 viewOrganization : Organization -> Element msg
 viewOrganization organization =
-    column [ width fill, spacing 10 ]
+    column [ width (fill |> maximum 800), spacing 10 ]
         [ viewSection
             [ paragraph [ Font.bold ] [ text organization.name ]
             , el [ alignLeft ] <| Element.html <| FontAwesome.iconWithOptions FontAwesome.infoCircle FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
             , paragraph [ Font.italic ] [ text "Organization" ]
             ]
-        , case organization.website of
-            Just "" ->
-                Element.none
-
-            Just websiteLink ->
+        , Util.renderWhenPresent
+            (\url ->
                 viewSection
                     [ paragraph [ Font.bold ] [ text "Website" ]
-                    , link [] { url = websiteLink, label = text websiteLink }
+                    , Link.website url
                     ]
-
-            Nothing ->
-                Element.none
+            )
+            organization.website
         ]
 
 

@@ -4,7 +4,7 @@ import Button
 import DataSource exposing (DataSource)
 import DataSource.Http
 import DataSource.Port
-import Element exposing (Element, alignTop, column, el, fill, link, newTabLink, padding, paddingXY, paragraph, row, spacing, text, textColumn, width)
+import Element exposing (Element, alignTop, column, el, fill, link, maximum, newTabLink, padding, paddingXY, paragraph, row, spacing, text, textColumn, width)
 import Element.Font as Font
 import FontAwesome
 import Head
@@ -16,13 +16,13 @@ import Organization exposing (Organization)
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
+import Phone
 import Service exposing (Service)
 import Shared
 import Spreadsheet
 import Util
 import View exposing (View)
-import Mask
-import Phone
+import Link
 
 
 type alias Model =
@@ -178,6 +178,7 @@ directionsLink address =
                 |> Button.render
         }
 
+
 callLink : String -> Element msg
 callLink phone =
     let
@@ -215,21 +216,10 @@ viewSection children =
         ]
 
 
-websiteLink : String -> Element msg
-websiteLink website =
-    newTabLink []
-        { url = website
-        , label =
-            row [ spacing 10, padding 10 ]
-                [ text <| String.replace "https://" "" <| String.replace "https://www." "" website
-                , el [] <| Element.html <| FontAwesome.icon FontAwesome.externalLinkAlt
-                ]
-        }
-
 
 viewService : Organization -> Service -> Element Msg
 viewService organization service =
-    column [ width fill, padding 10, spacing 10 ]
+    column [ width (fill |> maximum 800), padding 10, spacing 10 ]
         ([ viewHeader
             [ paragraph [ Font.bold ] [ text organization.name ]
             , link [] { url = "/organizations/detail/" ++ String.fromInt organization.id, label = paragraph [ Font.italic ] [ text "Organization" ] }
@@ -288,7 +278,7 @@ viewService organization service =
                     [ column [ width fill, spacing 10 ]
                         [ Util.renderWhenPresent directionsLink organization.address
                         , Util.renderWhenPresent callLink organization.phone
-                        , Maybe.withDefault Element.none <| Maybe.map websiteLink organization.website
+                        , Maybe.withDefault Element.none <| Maybe.map Link.website organization.website
                         ]
                     ]
                ]
