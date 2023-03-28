@@ -1,7 +1,7 @@
 module Page.Index exposing (Data, Model, Msg, RouteParams, page)
 
 import DataSource exposing (DataSource)
-import Element exposing (Element, alignRight, alignTop, centerX, column, fill, fillPortion, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
+import Element exposing (Element, alignRight, alignTop, centerX, column, fill, height, link, maximum, padding, paddingXY, paragraph, px, row, spacing, text, textColumn, width, wrappedRow)
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
@@ -127,53 +127,6 @@ viewWelcomeBanner =
         ]
 
 
-viewHelpBanner : Element a
-viewHelpBanner =
-    row
-        [ width fill
-        ]
-        [ column
-            [ width fill
-            , padding 10
-            , Border.width 1
-            , Border.rounded 15
-            ]
-            [ row
-                [ width fill
-                , spacing 10
-                ]
-                [ textColumn [ width (fillPortion 20) ]
-                    [ paragraph
-                        [ width fill
-                        , Font.center
-                        , Font.size 16
-                        ]
-                        [ text "Not sure where to start?"
-                        ]
-                    , paragraph
-                        [ width fill
-                        , Font.center
-                        , Font.size 12
-                        ]
-                        [ text "Answer questions to help us find the best resources for you." ]
-                    ]
-                , link [ width (fillPortion 1) ]
-                    { url = "/help"
-                    , label =
-                        Input.button
-                            [ Border.width 1
-                            , centerX
-                            , padding 10
-                            ]
-                            { label = text "Find help"
-                            , onPress = Nothing
-                            }
-                    }
-                ]
-            ]
-        ]
-
-
 viewMoreLink : Element msg
 viewMoreLink =
     link [ alignRight, Font.underline, Font.size 14 ] { url = "/", label = text "More" }
@@ -243,7 +196,6 @@ view _ _ _ =
                 , spacing 20
                 ]
                 [ viewWelcomeBanner
-                , viewHelpBanner
                 , viewGroup { defaultCellConfig | isVertical = False, fontSize = 12 } "Urgent needs" Service.urgentNeeds
                 , viewGroup { defaultCellConfig | fontSize = 12 } "Get care" Service.care
                 , viewGroupAlt { defaultCellConfig | hasBorders = False } "Get connected" Service.connectivity

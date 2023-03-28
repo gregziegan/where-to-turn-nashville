@@ -1,16 +1,14 @@
-module Page.About exposing (Data, Model, Msg, page)
+module Page.About exposing (Data, Model, Msg, RouteParams, page)
 
 import DataSource exposing (DataSource)
-import Element exposing (column, fill, paragraph, text, width)
+import Element exposing (centerY, column, fill, maximum, paragraph, text, width)
 import Head
 import Head.Seo as Seo
-import Page exposing (Page, PageWithState, StaticPayload)
+import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
 import Shared
 import View exposing (View)
-import Element exposing (maximum)
-import Element exposing (centerY)
 
 
 type alias Model =
@@ -46,19 +44,19 @@ data =
 head :
     StaticPayload Data RouteParams
     -> List Head.Tag
-head static =
+head _ =
     Seo.summary
         { canonicalUrlOverride = Nothing
-        , siteName = "elm-pages"
+        , siteName = "where-to-turn-nashville"
         , image =
-            { url = Pages.Url.external "TODO"
-            , alt = "elm-pages logo"
+            { url = Pages.Url.external "https://where-to-turn-nashville.netlify.app"
+            , alt = "Where to turn in Nashville logo"
             , dimensions = Nothing
             , mimeType = Nothing
             }
-        , description = "TODO"
+        , description = "A handbook for our neighbors in need."
         , locale = Nothing
-        , title = "TODO title" -- metadata.title -- TODO
+        , title = "Where to turn in Nashville" -- metadata.title -- TODO
         }
         |> Seo.website
 
@@ -68,7 +66,7 @@ view :
     -> Shared.Model
     -> StaticPayload Data RouteParams
     -> View Msg
-view maybeUrl sharedModel static =
+view _ _ _ =
     { title = "Where to turn in Nashville | About"
     , body =
         [ column [ centerY, width (fill |> maximum 800) ]
