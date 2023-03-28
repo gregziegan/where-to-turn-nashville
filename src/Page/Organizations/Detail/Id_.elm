@@ -123,13 +123,16 @@ viewOrganization organization =
             , paragraph [ Font.italic ] [ text "Organization" ]
             ]
         , Util.renderWhenPresent
-            (\url ->
+            (\notes ->
                 viewSection
-                    [ paragraph [ Font.bold ] [ text "Website" ]
-                    , Link.website url
+                    [ paragraph [ Font.bold ] [ text "Description" ]
+                    , paragraph [] [ text notes ]
                     ]
             )
-            organization.website
+            organization.notes
+        , Util.renderWhenPresent Link.directions organization.address
+        , Util.renderWhenPresent Link.call organization.phone
+        , Util.renderWhenPresent Link.website organization.website
         ]
 
 

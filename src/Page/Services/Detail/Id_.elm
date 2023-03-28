@@ -10,6 +10,7 @@ import FontAwesome
 import Head
 import Head.Seo as Seo
 import Json.Encode
+import Link exposing (call, directions)
 import List.Extra
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
@@ -22,7 +23,6 @@ import Shared
 import Spreadsheet
 import Util
 import View exposing (View)
-import Link
 
 
 type alias Model =
@@ -164,42 +164,6 @@ viewUnorderedList l =
         )
 
 
-directionsLink : String -> Element msg
-directionsLink address =
-    newTabLink []
-        { url = "https://www.google.com/maps/dir/?api=1&destination=" ++ address
-        , label =
-            Button.transparent
-                { onPress = Nothing
-                , text = "Directions"
-                }
-                |> Button.fullWidth
-                |> Button.withIcon FontAwesome.mapMarker
-                |> Button.render
-        }
-
-
-callLink : String -> Element msg
-callLink phone =
-    let
-        formattedPhone : String
-        formattedPhone =
-            Phone.format phone
-    in
-    link []
-        { url = "tel:+" ++ phone
-        , label =
-            Button.transparent
-                { onPress = Nothing
-                , text = "Call " ++ formattedPhone
-                }
-                |> Button.fullWidth
-                |> Button.withIcon FontAwesome.phone
-                |> Button.withIconOptions [ FontAwesome.Transform [ FontAwesome.FlipHorizontal ] ]
-                |> Button.render
-        }
-
-
 viewHeader : List (Element msg) -> Element msg
 viewHeader children =
     row [ width fill ]
@@ -214,7 +178,6 @@ viewSection children =
         [ textColumn [ width fill, spacing 10, paddingXY 10 0 ]
             children
         ]
-
 
 
 viewService : Organization -> Service -> Element Msg
@@ -276,8 +239,8 @@ viewService organization service =
                )
             ++ [ row [ width fill ]
                     [ column [ width fill, spacing 10 ]
-                        [ Util.renderWhenPresent directionsLink organization.address
-                        , Util.renderWhenPresent callLink organization.phone
+                        [ Util.renderWhenPresent directions organization.address
+                        , Util.renderWhenPresent call organization.phone
                         , Maybe.withDefault Element.none <| Maybe.map Link.website organization.website
                         ]
                     ]

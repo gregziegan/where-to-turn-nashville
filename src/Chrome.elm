@@ -9,6 +9,7 @@ import Element.Font as Font
 import Element.Input as Input
 import FontAwesome
 import Html.Attributes as Attrs
+import Link
 import Palette
 import Path exposing (Path)
 import Route exposing (Route(..))
@@ -27,14 +28,6 @@ logo =
     Element.link []
         { url = "/"
         , label = Element.image [ width (px 60), height (px 60) ] { src = "/images/otn-logo.jpg", description = "Open Table Nashville logo" }
-        }
-
-
-menuLink : String -> String -> Element msg
-menuLink label path =
-    link [ width fill, Font.bold ]
-        { url = path
-        , label = text label
         }
 
 
@@ -108,7 +101,7 @@ resourceLinks =
 viewMenu : Element msg
 viewMenu =
     column [ width fill ]
-        [ viewMenuLink <| menuLink "Home" "/"
+        [ viewMenuLink <| Link.menu "Home" "/"
         , row [ width fill, padding 10 ]
             [ column [ width fill ]
                 [ paragraph [ Font.bold ] [ text "Resources" ]
@@ -119,11 +112,11 @@ viewMenu =
                     (List.map viewMenuLink resourceLinks)
                 ]
             ]
-        , viewMenuLink <| menuLink "Order the guide" "/"
-        , viewMenuLink <| menuLink "Add or edit a listing" "/"
-        , viewMenuLink <| menuLink "About" "/"
-        , viewMenuLink <| menuLink "Other resources" "/"
-        , viewMenuLink <| menuLink "My Saved" "/saved"
+        , viewMenuLink <| Link.menu "Order the guide" "/"
+        , viewMenuLink <| Link.menu "Add or edit a listing" "/"
+        , viewMenuLink <| Link.menu "About" "/"
+        , viewMenuLink <| Link.menu "Other resources" "/"
+        , viewMenuLink <| Link.menu "My Saved" "/saved"
         ]
 
 
