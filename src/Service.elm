@@ -1,9 +1,9 @@
-module Service exposing (Category(..), Service, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, forGroups, help, largeListItem, listItem, other, sheetId, sheetRange, urgentNeeds, work)
+module Service exposing (Category(..), Service, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, branding, forGroups, help, largeListItem, listItem, other, sheetId, sheetRange, urgentNeeds, viewIcon, work)
 
-import Element exposing (Element, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
+import Element exposing (Element, centerX, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
 import Element.Border as Border
 import Element.Font as Font
-import FontAwesome
+import FontAwesome exposing (Icon, Option(..), Transform(..))
 import OptimizedDecoder as Decode exposing (Decoder, string)
 import OptimizedDecoder.Pipeline exposing (custom, decode, hardcoded)
 import String.Extra as String
@@ -565,13 +565,6 @@ decoder =
         |> custom (Decode.index 3 string)
 
 
-photo : Service -> Element msg
-photo _ =
-    el
-        [ padding 10
-        ]
-        (Element.html <| FontAwesome.icon FontAwesome.infoCircle)
-
 
 briefDescription : Service -> String
 briefDescription service =
@@ -621,7 +614,7 @@ listItem distance service =
             , width (fill |> minimum 330 |> maximum 1000)
             , Border.width 1
             ]
-            [ photo service
+            [ viewIcon (branding service.category)
             , briefDescriptionColumn service
             , distancePin distance
             ]
@@ -638,9 +631,123 @@ largeListItem distance service =
             , width fill
             , Border.width 1
             ]
-            [ photo service
+            [ viewIcon (branding service.category)
             , paragraph [ Font.center, padding 10 ] [ text service.organizationName ]
             , paragraph [ padding 10 ] [ text (briefDescription service) ]
             , distancePin distance
             ]
         )
+
+
+type alias Branding =
+    { icon : Icon
+    , iconOptions : List Option
+    , title : String
+    }
+
+
+viewIcon : Branding -> Element msg
+viewIcon { icon, iconOptions } =
+    Element.el [ Font.center, centerX ] <|
+        Element.html <|
+            FontAwesome.iconWithOptions icon FontAwesome.Solid (FontAwesome.Size (FontAwesome.Mult 2) :: iconOptions) []
+
+
+branding : Category -> Branding
+branding filter =
+    case filter of
+        Food ->
+            Branding FontAwesome.utensils [] "Food"
+
+        Housing ->
+            Branding FontAwesome.home [] "Housing"
+
+        PersonalCare ->
+            Branding FontAwesome.shower [] "Personal care"
+
+        RentAndUtilitiesAssistance ->
+            Branding FontAwesome.moneyCheckAlt [] "Rent and utilities assistance"
+
+        MedicalCare ->
+            Branding FontAwesome.stethoscope [] "Medical care"
+
+        MentalHealth ->
+            Branding FontAwesome.brain [] "Mental health"
+
+        AddictionServices ->
+            Branding FontAwesome.wineBottle [] "Addiction services"
+
+        NursingHomesAndHospice ->
+            Branding FontAwesome.bed [] "Nursing homes and hospice"
+
+        DentalAndHearing ->
+            Branding FontAwesome.tooth [] "Dental and hearing"
+
+        HivPrepHepC ->
+            Branding FontAwesome.ribbon [] "HIV, PrEP, and Hep C"
+
+        Transportation ->
+            Branding FontAwesome.bus [] "Transportation"
+
+        Internet ->
+            Branding FontAwesome.wifi [] "Internet"
+
+        Phones ->
+            Branding FontAwesome.mobile [] "Phones"
+
+        LegalAid ->
+            Branding FontAwesome.balanceScale [] "Legal aid"
+
+        DomesticViolence ->
+            Branding FontAwesome.fistRaised [ Transform [ Rotate 90 ] ] "Domestic violence"
+
+        SexualAssault ->
+            Branding FontAwesome.exclamationTriangle [] "Sexual assault"
+
+        IDsAndSSI ->
+            Branding FontAwesome.idCard [] "IDs and SSI"
+
+        JobsAndJobTraining ->
+            Branding FontAwesome.briefcase [] "Jobs and job training"
+
+        AdultEducation ->
+            Branding FontAwesome.graduationCap [] "Adult education"
+
+        TutorsAndMentoring ->
+            Branding FontAwesome.school [] "Tutors and mentoring"
+
+        Childcare ->
+            Branding FontAwesome.hands [] "Childcare"
+
+        ParentingHelp ->
+            Branding FontAwesome.handHoldingHeart [] "Parenting help"
+
+        SeniorsAndDisabilities ->
+            Branding FontAwesome.wheelchair [] "Seniors and people with disabilities"
+
+        LGBTQPlus ->
+            Branding FontAwesome.flag [] "LGBTQ+"
+
+        Veterans ->
+            Branding FontAwesome.medal [] "Veterans"
+
+        ImmigrantsAndRefugees ->
+            Branding FontAwesome.globeAfrica [] "Immigrants and refugees"
+
+        FormerlyIncarcerated ->
+            Branding FontAwesome.box [] "Formerly incarcerated"
+
+        OnSexOffenderRegistry ->
+            Branding FontAwesome.list [] "On sex offender registry"
+
+        PetHelp ->
+            Branding FontAwesome.dog [] "Pet help"
+
+        OutsideOfDavidsonCounty ->
+            Branding FontAwesome.mapSigns [] "Outside of Davidson Co."
+
+        Arts ->
+            Branding FontAwesome.theaterMasks [] "Arts"
+
+        Advocacy ->
+            Branding FontAwesome.handshake [] "Advocacy"

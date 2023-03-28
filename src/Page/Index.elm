@@ -68,13 +68,13 @@ type alias Data =
 
 
 viewFilterLink : { a | hasBorders : Bool, isVertical : Bool, fontSize : Int } -> Category -> Element msg
-viewFilterLink { hasBorders, isVertical, fontSize } filter =
+viewFilterLink { hasBorders, isVertical, fontSize } category =
     let
-        ( icon, options, title ) =
-            filterDetails filter
+        branding =
+            Service.branding category
     in
     Element.link [ width fill ]
-        { url = "/services/" ++ Service.categoryToString filter
+        { url = "/services/" ++ Service.categoryToString category
         , label =
             Input.button
                 ([ width (px 140)
@@ -96,126 +96,22 @@ viewFilterLink { hasBorders, isVertical, fontSize } filter =
                 , label =
                     if isVertical then
                         column [ width fill, paddingXY 5 0, spacing 10 ]
-                            [ Element.el [ Font.center, centerX ] <|
-                                Element.html <|
-                                    FontAwesome.iconWithOptions icon FontAwesome.Solid (FontAwesome.Size (FontAwesome.Mult 2) :: options) []
-                            , paragraph [ Font.center, Font.size fontSize ] [ text title ]
+                            [ Service.viewIcon branding
+                            , paragraph [ Font.center, Font.size fontSize ] [ text branding.title ]
                             ]
 
                     else
                         row [ paddingXY 5 0, width fill ]
-                            [ Element.el [ alignRight ] <|
-                                Element.html <|
-                                    FontAwesome.iconWithOptions icon FontAwesome.Solid (FontAwesome.Size (FontAwesome.Mult 2) :: options) []
+                            [ Service.viewIcon branding
                             , paragraph
                                 [ Font.size fontSize
                                 , Font.center
                                 , paddingXY 5 0
                                 ]
-                                [ text title ]
+                                [ text branding.title ]
                             ]
                 }
         }
-
-
-filterDetails : Category -> ( FontAwesome.Icon, List Option, String )
-filterDetails filter =
-    case filter of
-        Food ->
-            ( FontAwesome.utensils, [], "Food" )
-
-        Housing ->
-            ( FontAwesome.home, [], "Housing" )
-
-        PersonalCare ->
-            ( FontAwesome.shower, [], "Personal care" )
-
-        RentAndUtilitiesAssistance ->
-            ( FontAwesome.moneyCheckAlt, [], "Rent and utilities assistance" )
-
-        MedicalCare ->
-            ( FontAwesome.stethoscope, [], "Medical care" )
-
-        MentalHealth ->
-            ( FontAwesome.brain, [], "Mental health" )
-
-        AddictionServices ->
-            ( FontAwesome.wineBottle, [], "Addiction services" )
-
-        NursingHomesAndHospice ->
-            ( FontAwesome.bed, [], "Nursing homes and hospice" )
-
-        DentalAndHearing ->
-            ( FontAwesome.tooth, [], "Dental and hearing" )
-
-        HivPrepHepC ->
-            ( FontAwesome.ribbon, [], "HIV, PrEP, and Hep C" )
-
-        Transportation ->
-            ( FontAwesome.bus, [], "Transportation" )
-
-        Internet ->
-            ( FontAwesome.wifi, [], "Internet" )
-
-        Phones ->
-            ( FontAwesome.mobile, [], "Phones" )
-
-        LegalAid ->
-            ( FontAwesome.balanceScale, [], "Legal aid" )
-
-        DomesticViolence ->
-            ( FontAwesome.fistRaised, [ Transform [ Rotate 90 ] ], "Domestic violence" )
-
-        SexualAssault ->
-            ( FontAwesome.exclamationTriangle, [], "Sexual assault" )
-
-        IDsAndSSI ->
-            ( FontAwesome.idCard, [], "IDs and SSI" )
-
-        JobsAndJobTraining ->
-            ( FontAwesome.briefcase, [], "Jobs and job training" )
-
-        AdultEducation ->
-            ( FontAwesome.graduationCap, [], "Adult education" )
-
-        TutorsAndMentoring ->
-            ( FontAwesome.school, [], "Tutors and mentoring" )
-
-        Childcare ->
-            ( FontAwesome.hands, [], "Childcare" )
-
-        ParentingHelp ->
-            ( FontAwesome.handHoldingHeart, [], "Parenting help" )
-
-        SeniorsAndDisabilities ->
-            ( FontAwesome.wheelchair, [], "Seniors and people with disabilities" )
-
-        LGBTQPlus ->
-            ( FontAwesome.flag, [], "LGBTQ+" )
-
-        Veterans ->
-            ( FontAwesome.medal, [], "Veterans" )
-
-        ImmigrantsAndRefugees ->
-            ( FontAwesome.globeAfrica, [], "Immigrants and refugees" )
-
-        FormerlyIncarcerated ->
-            ( FontAwesome.box, [], "Formerly incarcerated" )
-
-        OnSexOffenderRegistry ->
-            ( FontAwesome.list, [], "On sex offender registry" )
-
-        PetHelp ->
-            ( FontAwesome.dog, [], "Pet help" )
-
-        OutsideOfDavidsonCounty ->
-            ( FontAwesome.mapSigns, [], "Outside of Davidson Co." )
-
-        Arts ->
-            ( FontAwesome.theaterMasks, [], "Arts" )
-
-        Advocacy ->
-            ( FontAwesome.handshake, [], "Advocacy" )
 
 
 viewWelcomeBanner : Element msg
