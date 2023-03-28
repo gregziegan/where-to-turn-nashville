@@ -204,8 +204,10 @@ view _ sharedModel static =
     let
         filterText : String
         filterText =
-            Maybe.withDefault "All services" <|
-                Maybe.map String.Extra.toSentenceCase static.routeParams.filter
+            static.routeParams.filter
+                |> Maybe.map String.Extra.toSentenceCase
+                |> Maybe.withDefault "All services"
+                |> String.replace "-" " "
 
         device : Device
         device =

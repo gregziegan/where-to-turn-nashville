@@ -20,7 +20,7 @@ import Pages.PageUrl exposing (PageUrl)
 import Pages.Secrets as Secrets
 import Pages.Url
 import Phone
-import Service exposing (Service)
+import Service exposing (Category(..), Service)
 import Shared
 import Spreadsheet
 import Util
@@ -267,11 +267,18 @@ viewService mapUrl organization service =
                )
             ++ [ row [ width fill ]
                     [ column [ width fill, spacing 10 ]
-                        [ Maybe.withDefault Element.none <| Maybe.map Link.website organization.website
-                        , Util.renderWhenPresent call organization.phone
-                        , Util.renderWhenPresent directions organization.address
-                        , Util.renderWhenPresent Map.view (Debug.log "mapUrl" mapUrl)
-                        ]
+                        ([ Maybe.withDefault Element.none <| Maybe.map Link.website organization.website
+                         , Util.renderWhenPresent call organization.phone
+                         ]
+                            ++ (if service.category == OutsideOfDavidsonCounty then
+                                    []
+
+                                else
+                                    [ Util.renderWhenPresent directions organization.address
+                                    , Util.renderWhenPresent Map.view mapUrl
+                                    ]
+                               )
+                        )
                     ]
                ]
         )

@@ -14,6 +14,7 @@ import Palette
 import Path exposing (Path)
 import Route exposing (Route(..))
 import Search
+import Service exposing (Category(..))
 import Util
 import Window exposing (Window)
 
@@ -28,16 +29,6 @@ logo =
     Element.link []
         { url = "/"
         , label = Element.image [ width (px 60), height (px 60) ] { src = "/images/otn-logo.jpg", description = "Open Table Nashville logo" }
-        }
-
-
-resourceLink : String -> String -> Element msg
-resourceLink label path =
-    link
-        [ width fill
-        ]
-        { url = path
-        , label = paragraph [ width (fill |> maximum 280) ] [ text label ]
         }
 
 
@@ -79,22 +70,21 @@ viewMenuLink aLink =
 
 resourceLinks : List (Element msg)
 resourceLinks =
-    [ resourceLink "Special populations" "/"
-    , resourceLink "Housing" "/"
-    , resourceLink "Food" "/"
-    , resourceLink "Personal care" "/"
-    , resourceLink "Rent and utilities assistance" "/"
-    , resourceLink "Healthcare" "/"
-    , resourceLink "Jobs and education" "/"
-    , resourceLink "Legal aid, IDs and SSI" "/"
-    , resourceLink "Domestic violence and sexual assault" "/"
-    , resourceLink "Transportation" "/"
-    , resourceLink "Phones and internet" "/"
-    , resourceLink "Family and youth resources" "/"
-    , resourceLink "Pets" "/"
-    , resourceLink "Arts" "/"
-    , resourceLink "Advocacy" "/"
-    , resourceLink "Outside Davidson County" "/"
+    [ Link.resource SeniorsAndDisabilities
+    , Link.resource Housing
+    , Link.resource Food
+    , Link.resource PersonalCare
+    , Link.resource RentAndUtilitiesAssistance
+    , Link.resource MedicalCare
+    , Link.resource JobsAndJobTraining
+    , Link.resource LegalAid
+    , Link.resource DomesticViolence
+    , Link.resource Transportation
+    , Link.resource Phones
+    , Link.resource PetHelp
+    , Link.resource Arts
+    , Link.resource Advocacy
+    , Link.resource OutsideOfDavidsonCounty
     ]
 
 
