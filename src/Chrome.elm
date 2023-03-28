@@ -102,11 +102,7 @@ viewMenu =
                     (List.map viewMenuLink resourceLinks)
                 ]
             ]
-        , viewMenuLink <| Link.menu "Order the guide" "/"
-        , viewMenuLink <| Link.menu "Add or edit a listing" "/"
-        , viewMenuLink <| Link.menu "About" "/"
-        , viewMenuLink <| Link.menu "Other resources" "/"
-        , viewMenuLink <| Link.menu "My Saved" "/saved"
+        , viewMenuLink <| Link.menu "About" "/about"
         ]
 
 
