@@ -1,4 +1,4 @@
-module Service exposing (Category(..), Service, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, branding, forGroups, help, largeListItem, listItem, other, sheetId, sheetRange, urgentNeeds, viewIcon, work)
+module Service exposing (Category(..), Service, branding, care, categories, categoryFromString, categoryToString, connectivity, decoder, familyAndYouth, forGroups, help, largeListItem, listItem, other, sheetId, sheetRange, urgentNeeds, viewIcon, work)
 
 import Element exposing (Element, centerX, column, el, fill, height, link, maximum, minimum, padding, paragraph, px, row, spaceEvenly, spacing, text, textColumn, width)
 import Element.Border as Border
@@ -6,6 +6,7 @@ import Element.Font as Font
 import FontAwesome exposing (Icon, Option(..), Transform(..))
 import OptimizedDecoder as Decode exposing (Decoder, string)
 import OptimizedDecoder.Pipeline exposing (custom, decode, hardcoded)
+import String exposing (words)
 import String.Extra as String
 import Util exposing (cleanNullableString, cleanString)
 
@@ -565,10 +566,24 @@ decoder =
         |> custom (Decode.index 3 string)
 
 
-
 briefDescription : Service -> String
 briefDescription service =
-    String.join " " <| List.take 10 <| String.words service.description
+    let
+        words =
+            String.words service.description
+
+        ellipses =
+            if List.length words > 10 then
+                "..."
+
+            else
+                ""
+    in
+    (words
+        |> List.take 10
+        |> String.join " "
+    )
+        ++ ellipses
 
 
 briefDescriptionColumn : Service -> Element msg
@@ -582,20 +597,6 @@ briefDescriptionColumn service =
         ]
 
 
-distancePin : Float -> Element msg
-distancePin distance =
-    link []
-        { url = ""
-        , label =
-            column []
-                [ Element.el [] <|
-                    Element.html <|
-                        FontAwesome.iconWithOptions FontAwesome.locationArrow FontAwesome.Solid [ FontAwesome.Size FontAwesome.Large ] []
-                , text (String.fromFloat distance)
-                ]
-        }
-
-
 itemLink : Service -> Element msg -> Element msg
 itemLink service children =
     link [ width fill ]
@@ -604,8 +605,8 @@ itemLink service children =
         }
 
 
-listItem : Float -> Service -> Element msg
-listItem distance service =
+listItem : Service -> Element msg
+listItem service =
     itemLink service
         (row
             [ spacing 10
@@ -616,13 +617,12 @@ listItem distance service =
             ]
             [ viewIcon (branding service.category)
             , briefDescriptionColumn service
-            , distancePin distance
             ]
         )
 
 
-largeListItem : Float -> Service -> Element msg
-largeListItem distance service =
+largeListItem : Service -> Element msg
+largeListItem service =
     itemLink service
         (row
             [ spaceEvenly
@@ -634,7 +634,6 @@ largeListItem distance service =
             [ viewIcon (branding service.category)
             , paragraph [ Font.center, padding 10 ] [ text service.organizationName ]
             , paragraph [ padding 10 ] [ text (briefDescription service) ]
-            , distancePin distance
             ]
         )
 

@@ -96,7 +96,7 @@ data routeParams =
             (\maybeService ->
                 case maybeService of
                     Just service ->
-                        DataSource.map3 Data
+                        DataSource.map2 Tuple.pair
                             (DataSource.succeed maybeService)
                             (DataSource.Port.get "organizations"
                                 (Json.Encode.string "meh")
@@ -110,9 +110,27 @@ data routeParams =
                                     )
                                 )
                             )
-                            (DataSource.Port.get "mapUrl"
-                                (Json.Encode.string "address")
-                                (Decode.nullable Decode.string)
+
+                    Nothing ->
+                        DataSource.map2 Tuple.pair
+                            (DataSource.succeed maybeService)
+                            (DataSource.succeed Nothing)
+            )
+        |> DataSource.andThen
+            (\( maybeService, maybeOrganization ) ->
+                case maybeOrganization of
+                    Just organization ->
+                        DataSource.map3 Data
+                            (DataSource.succeed maybeService)
+                            (DataSource.succeed maybeOrganization)
+                            (case organization.address of
+                                Just address ->
+                                    DataSource.Port.get "mapUrl"
+                                        (Json.Encode.string address)
+                                        (Decode.nullable Decode.string)
+
+                                Nothing ->
+                                    DataSource.succeed Nothing
                             )
 
                     Nothing ->
@@ -252,7 +270,7 @@ viewService mapUrl organization service =
                         [ Maybe.withDefault Element.none <| Maybe.map Link.website organization.website
                         , Util.renderWhenPresent call organization.phone
                         , Util.renderWhenPresent directions organization.address
-                        , Util.renderWhenPresent Map.view mapUrl
+                        , Util.renderWhenPresent Map.view (Debug.log "mapUrl" mapUrl)
                         ]
                     ]
                ]

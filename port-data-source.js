@@ -27,6 +27,6 @@ module.exports =
             .then(response => response.json());
     },
     mapUrl: async function (address) {
-        return address === null ? null : `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_API_KEY}&q=${address}`;
+        return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_API_KEY}&q=${address}`;
     }
 }

@@ -20,10 +20,13 @@ website url =
     newTabLink []
         { url = url
         , label =
-            row [ spacing 10, padding 10 ]
-                [ text <| String.replace "https://" "" <| String.replace "https://www." "" url
-                , el [] <| Element.html <| FontAwesome.icon FontAwesome.externalLinkAlt
-                ]
+            Button.transparent
+                { onPress = Nothing
+                , text = String.replace "https://" "" <| String.replace "https://www." "" url
+                }
+                |> Button.fullWidth
+                |> Button.withIcon FontAwesome.externalLinkAlt
+                |> Button.render
         }
 
 

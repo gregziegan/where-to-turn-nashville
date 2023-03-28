@@ -143,7 +143,7 @@ viewList toItem static =
         maybeCategory =
             Maybe.andThen Service.categoryFromString static.routeParams.filter
     in
-    column [ spacing 20, width fill ]
+    column [ spacing 20, width (fill |> maximum 800) ]
         (List.filterMap
             (Maybe.map toItem << filterServiceByCategory maybeCategory)
             (Dict.values static.data.services)
@@ -162,12 +162,12 @@ viewMobile filterText sharedModel static =
             ]
         , case ( sharedModel.searchQuery, static.data.searchIndex ) of
             ( Just query, Just searchIndex ) ->
-                viewSearchFilteredList (Service.listItem 1.7)
+                viewSearchFilteredList Service.listItem
                     static.data.services
                     (ElmTextSearch.search query searchIndex)
 
             _ ->
-                viewList (Service.listItem 1.7) static
+                viewList Service.listItem static
         ]
     ]
 
@@ -185,12 +185,12 @@ viewDesktop filterText sharedModel static =
         , case ( sharedModel.searchQuery, static.data.searchIndex ) of
             ( Just query, Just searchIndex ) ->
                 viewSearchFilteredList
-                    (Service.largeListItem 1.7)
+                    Service.largeListItem
                     static.data.services
                     (ElmTextSearch.search query searchIndex)
 
             _ ->
-                viewList (Service.largeListItem 1.7) static
+                viewList Service.largeListItem static
         ]
     ]
 
