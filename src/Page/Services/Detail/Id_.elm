@@ -12,10 +12,12 @@ import Head.Seo as Seo
 import Json.Encode
 import Link exposing (call, directions)
 import List.Extra
+import Map
 import OptimizedDecoder as Decode
 import Organization exposing (Organization)
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
+import Pages.Secrets as Secrets
 import Pages.Url
 import Phone
 import Service exposing (Service)
@@ -35,6 +37,13 @@ type alias Msg =
 
 type alias RouteParams =
     { id : String }
+
+
+type alias Data =
+    { service : Maybe Service
+    , organization : Maybe Organization
+    , mapUrl : Maybe String
+    }
 
 
 page : Page RouteParams Data
@@ -87,7 +96,7 @@ data routeParams =
             (\maybeService ->
                 case maybeService of
                     Just service ->
-                        DataSource.map2 Tuple.pair
+                        DataSource.map3 Data
                             (DataSource.succeed maybeService)
                             (DataSource.Port.get "organizations"
                                 (Json.Encode.string "meh")
@@ -101,10 +110,15 @@ data routeParams =
                                     )
                                 )
                             )
+                            (DataSource.Port.get "mapUrl"
+                                (Json.Encode.string "address")
+                                (Decode.nullable Decode.string)
+                            )
 
                     Nothing ->
-                        DataSource.map2 Tuple.pair
+                        DataSource.map3 Data
                             (DataSource.succeed maybeService)
+                            (DataSource.succeed Nothing)
                             (DataSource.succeed Nothing)
             )
 
@@ -127,10 +141,6 @@ head _ =
         , title = "TODO title" -- metadata.title -- TODO
         }
         |> Seo.website
-
-
-type alias Data =
-    ( Maybe Service, Maybe Organization )
 
 
 viewDescription : { a | description : String } -> Element msg
@@ -180,8 +190,8 @@ viewSection children =
         ]
 
 
-viewService : Organization -> Service -> Element Msg
-viewService organization service =
+viewService : Maybe String -> Organization -> Service -> Element Msg
+viewService mapUrl organization service =
     column [ width (fill |> maximum 800), padding 10, spacing 10 ]
         ([ viewHeader
             [ paragraph [ Font.bold ] [ text organization.name ]
@@ -239,9 +249,10 @@ viewService organization service =
                )
             ++ [ row [ width fill ]
                     [ column [ width fill, spacing 10 ]
-                        [ Util.renderWhenPresent directions organization.address
+                        [ Maybe.withDefault Element.none <| Maybe.map Link.website organization.website
                         , Util.renderWhenPresent call organization.phone
-                        , Maybe.withDefault Element.none <| Maybe.map Link.website organization.website
+                        , Util.renderWhenPresent directions organization.address
+                        , Util.renderWhenPresent Map.view mapUrl
                         ]
                     ]
                ]
@@ -261,9 +272,9 @@ view _ _ static =
             , padding 10
             , spacing 10
             ]
-            [ case static.data of
-                ( Just service, Just organization ) ->
-                    viewService organization service
+            [ case ( static.data.service, static.data.organization, static.data.mapUrl ) of
+                ( Just service, Just organization, mapUrl ) ->
+                    viewService mapUrl organization service
 
                 _ ->
                     text "Service not found"
